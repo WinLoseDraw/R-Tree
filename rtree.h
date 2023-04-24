@@ -21,7 +21,7 @@ struct rtree_node {
     struct rtree_node* parent;
 };
 
-typedef struct rtree_node* node;
+typedef struct rtree_node node;
 
 struct rtree {
     node* root;
