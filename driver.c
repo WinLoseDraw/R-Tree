@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include "rtree.h"
+#include "splitnode.c"
 
 int main() {
 
