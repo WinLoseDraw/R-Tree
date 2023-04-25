@@ -7,17 +7,11 @@
 
 typedef enum { false, true } bool;
 
-struct Element {
-    int MBR[N][N];
-    struct rtree_node* childPointer;
-};
-
-typedef struct Element Element;
-
 struct rtree_node {
     bool isLeaf;
     int count;
-    Element children[M];
+    int MBR[N][2];
+    struct rtree_node* childPointers[M];
     struct rtree_node* parent;
 };
 
