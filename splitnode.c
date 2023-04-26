@@ -1,57 +1,38 @@
 #include <stdio.h>
 #include "rtree.h"
+#include "helper_functions.h"
+#include "splitnode.h"
 
-Element dummy = {NULL, NULL};
+int dummyCoords[N][2] = {{0, 0}, {0, 0}}; // MBR for a dummy element, used as a helper
 
-#define DUMMY_ELEMENT dummy;
-
-int min(int n1, int n2)
+bool isDummyElement(Element e)
 {
-    if (n1 < n2)
-        return n1;
-    else
-        return n2;
+    for (int i = 0; i < 2; i++)
+    {
+        for (int j = 0; j < 2; j++)
+        {
+            if (e.MBR[i][j] != dummyCoords[i][j])
+                return false;
+        }
+    }
+
+    return true;
 }
 
-int max(int n1, int n2)
+void setAsDummyElement(Element *e)
 {
-    if (n1 > n2)
-        return n1;
-    else
-        return n2;
+    for (int i = 0; i < 2; i++)
+    {
+        for (int j = 0; j < 2; j++)
+        {
+            e->MBR[i][j] = 0;
+        }
+    }
 }
 
-int abs(int n)
-{
-    if (n < 0)
-        return -1 * n;
-}
-
-/*
-0, 0 = x1
-0, 1 = x2
-1, 0 = y1
-1, 1 = y2
-*/
-
-int area(int x1, int x2, int y1, int y2)
-{
-    return (x2 - x1) * (y2 - y1);
-}
-
-int calculateTempArea(Element e1, Element e2)
+int calculateTempArea(Element e1, Element e2) // used in splitnode
 {
     return area(min(e1.MBR[0][0], e2.MBR[0][0]), max(e1.MBR[0][1], e2.MBR[0][1]), min(e1.MBR[1][0], e2.MBR[1][0]), max(e1.MBR[1][1], e2.MBR[1][1]));
-}
-
-int areaOfElementMBR(Element e)
-{
-    return area(e.MBR[0][0], e.MBR[0][1], e.MBR[1][0], e.MBR[1][1]);
-}
-
-int areaOfNodeMBR(node n)
-{
-    return area(n.MBR[0][0], n.MBR[0][1], n.MBR[1][0], n.MBR[1][1]);
 }
 
 void quadraticPickSeeds(Element elementArray[M + 1], Element *firstElement, Element *secondElement)
@@ -84,7 +65,8 @@ void quadraticPickSeeds(Element elementArray[M + 1], Element *firstElement, Elem
         }
     }
 
-    elementArray[maxI], elementArray[maxJ] = DUMMY_ELEMENT;
+    setAsDummyElement(elementArray + maxI);
+    setAsDummyElement(elementArray + maxJ);
 }
 
 int calculateCost(Element e1, node group)
@@ -100,7 +82,8 @@ Element pickNext(node group1, node group2, Element originalElements[M + 1])
 
     int d1, d2, difference;
     int maxDifference = -1;
-    Element returnElement = DUMMY_ELEMENT;
+    Element returnElement;
+    setAsDummyElement(&returnElement);
     int returnIndex;
 
     for (int i = 0; i < M + 1; i++)
@@ -108,7 +91,7 @@ Element pickNext(node group1, node group2, Element originalElements[M + 1])
 
         Element e = originalElements[i];
 
-        if (e.MBR == NULL)
+        if (isDummyElement(e))
             continue;
 
         d1 = calculateCost(e, group1);
@@ -124,29 +107,12 @@ Element pickNext(node group1, node group2, Element originalElements[M + 1])
         }
     }
 
-    originalElements[returnIndex] = DUMMY_ELEMENT;
+    setAsDummyElement(originalElements + returnIndex);
 
     return returnElement;
 }
 
-void initializeNode(node *currentNode)
-{
-    currentNode->MBR[0][0] = 1000000;
-    currentNode->MBR[0][1] = -1000000;
-    currentNode->MBR[1][0] = 1000000;
-    currentNode->MBR[1][1] = -1000000;
-    currentNode->count = 0;
-}
-
-void updateMBRAfterInsert(node *currentNode, Element insertedElement)
-{
-    currentNode->MBR[0][0] = min(currentNode->MBR[0][0], insertedElement.MBR[0][0]);
-    currentNode->MBR[0][1] = max(currentNode->MBR[0][1], insertedElement.MBR[0][1]);
-    currentNode->MBR[1][0] = min(currentNode->MBR[1][0], insertedElement.MBR[1][0]);
-    currentNode->MBR[1][1] = max(currentNode->MBR[1][1], insertedElement.MBR[1][1]);
-}
-
-void quadraticSplitNode(node originalNode, Element extraElement)
+void quadraticSplitNode(node originalNode, Element extraElement, node *newNode1, node *newNode2)
 {
 
     Element elements[M + 1];
@@ -164,9 +130,13 @@ void quadraticSplitNode(node originalNode, Element extraElement)
     initializeNode(&firstNewNode);
     initializeNode(&secondNewNode);
 
-    quadraticPickSeeds(elements, &(firstNewNode.entries[0]), &(secondNewNode.entries[0]));
-    firstNewNode.count++;
-    secondNewNode.count++;
+    Element firstElementOfFirstNewNode;
+    Element firstElementOfSecondNewNode;
+
+    quadraticPickSeeds(elements, &firstElementOfFirstNewNode, &firstElementOfSecondNewNode);
+
+    insertElementIntoNode(&firstNewNode, firstElementOfFirstNewNode);
+    insertElementIntoNode(&secondNewNode, firstElementOfSecondNewNode);
 
     int remainingCount = M - 1; // after removing 2 elements from elements array using PickSeeds
 
@@ -181,11 +151,16 @@ void quadraticSplitNode(node originalNode, Element extraElement)
             while (remainingCount > 0)
             {
 
-                if (elements[index].MBR == NULL)
+                if (isDummyElement(elements[index]))
+                {
+                    index++;
                     continue;
-
-                firstNewNode.entries[firstNewNode.count++] = elements[index++];
-                remainingCount--;
+                }
+                else
+                {
+                    insertElementIntoNode(&firstNewNode, elements[index]);
+                    remainingCount--;
+                }
             }
 
             break;
@@ -199,11 +174,16 @@ void quadraticSplitNode(node originalNode, Element extraElement)
             while (remainingCount > 0)
             {
 
-                if (elements[index].MBR == NULL)
+                if (isDummyElement(elements[index]))
+                {
+                    index++;
                     continue;
-
-                secondNewNode.entries[secondNewNode.count++] = elements[index++];
-                remainingCount--;
+                }
+                else
+                {
+                    insertElementIntoNode(&secondNewNode, elements[index]);
+                    remainingCount--;
+                }
             }
 
             break;
@@ -211,7 +191,7 @@ void quadraticSplitNode(node originalNode, Element extraElement)
 
         Element nextElement = pickNext(firstNewNode, secondNewNode, elements);
 
-        if (nextElement.MBR == NULL)
+        if (isDummyElement(nextElement))
             break; // entries are finished
 
         int cost1 = calculateCost(nextElement, firstNewNode);
@@ -219,13 +199,11 @@ void quadraticSplitNode(node originalNode, Element extraElement)
 
         if (cost1 < cost2)
         {
-            firstNewNode.entries[firstNewNode.count++] = nextElement;
-            updateMBRAfterInsert(&firstNewNode, nextElement);
+            insertElementIntoNode(&firstNewNode, nextElement);
         }
         else if (cost2 < cost1)
         {
-            secondNewNode.entries[secondNewNode.count++] = nextElement;
-            updateMBRAfterInsert(&secondNewNode, nextElement);
+            insertElementIntoNode(&secondNewNode, nextElement);
         }
         else
         {
@@ -234,37 +212,36 @@ void quadraticSplitNode(node originalNode, Element extraElement)
 
             if (area1 < area2)
             {
-                firstNewNode.entries[firstNewNode.count++] = nextElement;
-                updateMBRAfterInsert(&firstNewNode, nextElement);
+                insertElementIntoNode(&firstNewNode, nextElement);
             }
             else if (area1 > area2)
             {
-                secondNewNode.entries[secondNewNode.count++] = nextElement;
-                updateMBRAfterInsert(&secondNewNode, nextElement);
+                insertElementIntoNode(&secondNewNode, nextElement);
             }
             else
             {
                 if (firstNewNode.count < secondNewNode.count)
                 {
-                    firstNewNode.entries[firstNewNode.count++] = nextElement;
-                    updateMBRAfterInsert(&firstNewNode, nextElement);
+                    insertElementIntoNode(&firstNewNode, nextElement);
                 }
                 else
                 {
-                    secondNewNode.entries[secondNewNode.count++] = nextElement;
-                    updateMBRAfterInsert(&secondNewNode, nextElement);
+                    insertElementIntoNode(&secondNewNode, nextElement);
                 }
             }
         }
 
         remainingCount--;
     }
+
+    *newNode1 = firstNewNode;
+    *newNode2 = secondNewNode;
 }
 
 void linearPickSeeds()
 {
 }
 
-void linearSplitNode()
+void linearSplitNode(node originalNode, Element extraElement, node *newNode1, node *newNode2)
 {
 }
