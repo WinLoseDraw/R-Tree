@@ -72,10 +72,10 @@ void copyCoordsToElementMBR(Element *e, int coords[N][2])
 
 void initializeNode(node *currentNode) // used in splitnode
 {
-    currentNode->MBR[0][0] = 1000000;
-    currentNode->MBR[0][1] = -1000000;
-    currentNode->MBR[1][0] = 1000000;
-    currentNode->MBR[1][1] = -1000000;
+    currentNode->MBR[0][0] = INT_HIGH;
+    currentNode->MBR[0][1] = INT_LOW;
+    currentNode->MBR[1][0] = INT_HIGH;
+    currentNode->MBR[1][1] = INT_LOW;
     currentNode->count = 0;
 }
 

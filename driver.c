@@ -39,7 +39,7 @@ void splitNodeTest() {
 
     node newNode1, newNode2;
 
-    quadraticSplitNode(testNode, extraElement, &newNode1, &newNode2);
+    linearSplitNode(testNode, extraElement, &newNode1, &newNode2);
 
     printf("\n\nNew nodes: \n\nNode 1:\n");
     displayNode(newNode1);
