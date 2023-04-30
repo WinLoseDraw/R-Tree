@@ -7,6 +7,8 @@
 #define INT_HIGH 1e8;
 #define INT_LOW -1e8;
 
+#include <stdlib.h>
+
 typedef enum { false, true } bool;
 
 struct Element {

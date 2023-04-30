@@ -92,3 +92,17 @@ void insertElementIntoNode(node *currentNode, Element e)
     currentNode->entries[currentNode->count++] = e;
     updateMBRAfterInsert(currentNode, e);
 }
+
+rtree* createNewRtree() {
+    rtree* ans = (rtree*) malloc(sizeof(rtree));
+    return ans;
+}
+
+node* createNewNode() {
+    node* ans = (node*) malloc(sizeof(node));
+    ans->isLeaf = true;
+    ans->count = 0;
+    ans->parent = NULL;
+
+    return ans;
+}

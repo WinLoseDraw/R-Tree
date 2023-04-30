@@ -2,6 +2,7 @@
 #include "rtree.h"
 #include "helper_functions.h"
 #include "splitnode.h"
+#include "insert.h"
 
 void splitNodeTest() {
     
@@ -47,8 +48,70 @@ void splitNodeTest() {
     displayNode(newNode2);
 }
 
+void bfs2(node* a, int count) {
+    node* arr[2][100];
+    arr[0][0] = a;
+    int index = 0;
+    int prevLast = 1;
+    int last = 0;
+    int cur = 0;
+    printf("BFS: \n");
+    while (prevLast < count) {
+        printf("%d %d %d %d\n", arr[cur][index]->MBR[0][0], arr[cur][index]->MBR[0][1], arr[cur][index]->MBR[1][0], arr[cur][index]->MBR[1][1]);
+        for (int i = 0; i < arr[cur][index]->count; i++) {
+            arr[(cur+1)%2][last] = arr[cur][index]->entries[i].childPointer;
+            last += 1;
+        }
+        index += 1;
+        if (index == prevLast) {
+            prevLast = last;
+            last = 0;
+            cur = (cur+1)%2;
+            printf("\n");
+            index = 0;
+        }
+    }
+
+    cur = (cur+1)%2;
+}
+
+void insertTest(){
+    printf("Hello");
+    rtree* a = createNewRtree();
+    node* root = createNewNode();
+    a->root = root;
+    int n = 21;
+    FILE* fptr = fopen("data.txt", "r");
+    Element dataPoints[n];
+    for (int i = 0; i < n; i++) {
+        int a, b;
+        fscanf(fptr, "%d", &a);
+        fscanf(fptr, "%d", &b);
+        dataPoints[i].MBR[0][0] = a;
+        dataPoints[i].MBR[0][1] = a;
+        dataPoints[i].MBR[1][0] = b;
+        dataPoints[i].MBR[1][1] = b;
+        dataPoints[i].childPointer = NULL;
+    }
+
+    printf("Hello\n");
+    for (int i = 0; i < n; i++) {
+        printf("insert1\n");
+        insert(a, dataPoints[i]);
+        printf("bfs\n");
+        bfs2(a->root, i);
+    }
+
+    printf("Hello");
+
+    bfs2(a->root, n);
+
+    
+}
+
 int main()
 {
-    splitNodeTest();
+    //splitNodeTest();
+    insertTest();
     return 0;
 }

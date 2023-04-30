@@ -1,4 +1,6 @@
 // header file for some general helper functions
+#ifndef HELPER_FUNCTIONS_H
+#define HELPER_FUNCTIONS_H
 
 #include "rtree.h"
 
@@ -23,3 +25,9 @@ void initializeNode(node *currentNode);
 void updateMBRAfterInsert(node *currentNode, Element insertedElement);
 
 void insertElementIntoNode(node *currentNode, Element e);
+
+rtree* createNewRtree();
+
+node* createNewNode();
+
+#endif

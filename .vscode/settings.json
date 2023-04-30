@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "float.h": "c",
+        "limits.h": "c",
+        "rtree.h": "c"
+    }
+}
