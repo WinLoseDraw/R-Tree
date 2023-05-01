@@ -7,18 +7,8 @@
 
 void mergeMBR(node* n1, Element ele) {
     for (int i=0; i<N; ++i) {
-        printf("Hi %d %d\n", N, i);
-        printf("%d %d\n", sizeof(ele.MBR), sizeof(ele.MBR[i][0]));
-        for (int i=0; i<2; ++i) {
-            for (int j=0; j<2; ++j) {
-                printf("%d ", n1->MBR[i][j]);
-            }
-            printf("\n");
-        }
-
         n1->MBR[i][0] = min(n1->MBR[i][0], ele.MBR[i][0]);
         n1->MBR[i][1] = max(n1->MBR[i][1], ele.MBR[i][1]);
-        printf("sex");
     }
 }
 
@@ -50,12 +40,15 @@ void insert(rtree *tr, Element ele) {
     if (leaf->count < M) {
         ele.childPointer = NULL;
         insertElementIntoNode(leaf, ele);
+
         adjust_tree(tr, leaf, NULL);
         return;
     }
 
     node *n1 = createNewNode();
     node *n2 = createNewNode();
+    n1->isLeaf = n2->isLeaf = true;
+
     linearSplitNode(*leaf, ele, n1, n2);
     
     adjust_tree(tr, n1, NULL);
@@ -94,12 +87,14 @@ node *choose_leaf(rtree *tr, Element ele) {
 }
 
 void adjust_tree(rtree *tree, node *n, node *child) {
-    printf("Adjusting tree\n");
     if (n->parent == NULL) {
-        if (n->count < M) return;
+        printf("adjust count: %d\n", n->count);
+        if (n->count <= M) return;
         node* n1 = createNewNode();
         node* n2 = createNewNode();
+        printf("Split the node\n");
         linearSplitNode(*n, n->entries[0], n1, n2);
+        
         node *root = createNewNode();
         root->isLeaf = false;
         n1->parent = n2->parent = root;
@@ -128,9 +123,7 @@ void adjust_tree(rtree *tree, node *n, node *child) {
 
         return;
     }
-    printf("woo\n");
     mergeMBR(n->parent, n->entries[0]);
-    printf("moo\n");
 
     if (n->count > M) {
         node *n1, *n2;

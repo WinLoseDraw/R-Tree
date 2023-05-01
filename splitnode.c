@@ -321,6 +321,7 @@ void linearPickSeeds(Element elementArray[M + 1], Element *firstElement, Element
 
 void linearSplitNode(node originalNode, Element extraElement, node *newNode1, node *newNode2)
 {
+    printf("start split\n");
     Element elements[M + 1];
 
     for (int i = 0; i < M; i++)
@@ -439,7 +440,7 @@ void linearSplitNode(node originalNode, Element extraElement, node *newNode1, no
 
         remainingCount--;
     }
-
+    printf("end split\n");
     *newNode1 = firstNewNode;
     *newNode2 = secondNewNode;
 }

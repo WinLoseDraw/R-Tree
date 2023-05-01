@@ -104,5 +104,10 @@ node* createNewNode() {
     ans->count = 0;
     ans->parent = NULL;
 
+    for (int i=0; i<N; ++i) {
+        ans->MBR[i][0] = INT_MAX;
+        ans->MBR[i][1] = INT_MIN;
+    }
+
     return ans;
 }
