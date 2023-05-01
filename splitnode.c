@@ -149,12 +149,12 @@ void adjustParent(node* leaf, node* n1, node* n2) {
 
 void linearPickSeeds(Element elementArray[M + 1], Element *firstElement, Element *secondElement)
 {
-    int highestLowX, highestLowY = INT_LOW;
-    int lowestHighX, lowestHighY = INT_HIGH;
+    int highestLowX, highestLowY = INT_MIN;
+    int lowestHighX, lowestHighY = INT_MAX;
     int highestLowXIndex, lowestHighXIndex, highestLowYIndex, lowestHighYIndex;
 
-    int minX, minY = INT_HIGH;
-    int maxX, maxY = INT_LOW;
+    int minX, minY = INT_MAX;
+    int maxX, maxY = INT_MIN;
 
     for (int i = 0; i < M; i++)
     {

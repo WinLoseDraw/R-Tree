@@ -15,8 +15,8 @@
 // #define M 4
 // #define m 2
 // #define N 2     //Number of dimensions
-// #define INT_HIGH 1e8;
-// #define INT_LOW -1e8;
+// #define INT_MAX 1e8;
+// #define INT_MIN -1e8;
 
 typedef enum { false, true } bool;
 
