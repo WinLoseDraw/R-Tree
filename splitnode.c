@@ -112,130 +112,39 @@ Element pickNext(node group1, node group2, Element originalElements[M + 1])
     return returnElement;
 }
 
-void quadraticSplitNode(node originalNode, Element extraElement, node *newNode1, node *newNode2)
-{
+void adjustParent(node* leaf, node* n1, node* n2) {
+    if (leaf->parent) {
+        printf("here\n");
+        printf("%p\n", leaf->parent);
+        for (int i = 0; i < leaf->parent->count; i++) {
+            if (leaf->parent->entries[i].childPointer == leaf) {
+                for (int j = i+1; j < leaf->parent->count; i++) {
+                    leaf->parent->entries[j-1] = leaf->parent->entries[j];
+                }
+                break;
+            }
+        }
+        leaf->parent->count -= 1;
+        
+        Element temp;
+        temp.childPointer = n1;
+        temp.MBR[0][0] = n1->MBR[0][0];
+        temp.MBR[0][1] = n1->MBR[0][1];
+        temp.MBR[1][0] = n1->MBR[1][0];
+        temp.MBR[1][1] = n1->MBR[1][1];
+        leaf->parent->entries[leaf->parent->count] = temp;
+        leaf->parent->count += 1;
 
-    Element elements[M + 1];
+        Element temp2;
+        temp2.childPointer = n2;
+        temp2.MBR[0][0] = n2->MBR[0][0];
+        temp2.MBR[0][1] = n2->MBR[0][1];
+        temp2.MBR[1][0] = n2->MBR[1][0];
+        temp2.MBR[1][1] = n2->MBR[1][1];
 
-    for (int i = 0; i < M; i++)
-    {
-        elements[i] = originalNode.entries[i];
+        leaf->parent->entries[leaf->parent->count] = temp2;
+        leaf->parent->count += 1;
     }
-
-    elements[M] = extraElement;
-
-    node firstNewNode;
-    node secondNewNode;
-
-    initializeNode(&firstNewNode);
-    initializeNode(&secondNewNode);
-
-    Element firstElementOfFirstNewNode;
-    Element firstElementOfSecondNewNode;
-
-    quadraticPickSeeds(elements, &firstElementOfFirstNewNode, &firstElementOfSecondNewNode);
-
-    insertElementIntoNode(&firstNewNode, firstElementOfFirstNewNode);
-    insertElementIntoNode(&secondNewNode, firstElementOfSecondNewNode);
-
-    int remainingCount = M - 1; // after removing 2 elements from elements array using PickSeeds
-
-    while (remainingCount > 0)
-    {
-
-        if (firstNewNode.count + remainingCount == m) // if there are too few entries in firstNewNode
-        {
-
-            int index = 0;
-
-            while (remainingCount > 0)
-            {
-
-                if (isDummyElement(elements[index]))
-                {
-                    index++;
-                    continue;
-                }
-                else
-                {
-                    insertElementIntoNode(&firstNewNode, elements[index]);
-                    remainingCount--;
-                }
-            }
-
-            break;
-        }
-
-        else if (secondNewNode.count + remainingCount == m) // if there are too few entries in secondNewNode
-        {
-
-            int index = 0;
-
-            while (remainingCount > 0)
-            {
-
-                if (isDummyElement(elements[index]))
-                {
-                    index++;
-                    continue;
-                }
-                else
-                {
-                    insertElementIntoNode(&secondNewNode, elements[index]);
-                    remainingCount--;
-                }
-            }
-
-            break;
-        }
-
-        Element nextElement = pickNext(firstNewNode, secondNewNode, elements);
-
-        if (isDummyElement(nextElement))
-            break; // entries are finished
-
-        int cost1 = calculateCost(nextElement, firstNewNode);
-        int cost2 = calculateCost(nextElement, secondNewNode);
-
-        if (cost1 < cost2)
-        {
-            insertElementIntoNode(&firstNewNode, nextElement);
-        }
-        else if (cost2 < cost1)
-        {
-            insertElementIntoNode(&secondNewNode, nextElement);
-        }
-        else
-        {
-            int area1 = areaOfNodeMBR(firstNewNode);
-            int area2 = areaOfNodeMBR(secondNewNode);
-
-            if (area1 < area2)
-            {
-                insertElementIntoNode(&firstNewNode, nextElement);
-            }
-            else if (area1 > area2)
-            {
-                insertElementIntoNode(&secondNewNode, nextElement);
-            }
-            else
-            {
-                if (firstNewNode.count < secondNewNode.count)
-                {
-                    insertElementIntoNode(&firstNewNode, nextElement);
-                }
-                else
-                {
-                    insertElementIntoNode(&secondNewNode, nextElement);
-                }
-            }
-        }
-
-        remainingCount--;
-    }
-
-    *newNode1 = firstNewNode;
-    *newNode2 = secondNewNode;
 }
 
 void linearPickSeeds(Element elementArray[M + 1], Element *firstElement, Element *secondElement)
@@ -319,17 +228,15 @@ void linearPickSeeds(Element elementArray[M + 1], Element *firstElement, Element
     }
 }
 
-void linearSplitNode(node originalNode, Element extraElement, node *newNode1, node *newNode2)
+void splitNode(node originalNode, node *newNode1, node *newNode2, bool isLinear)
 {
     printf("start split\n");
     Element elements[M + 1];
 
-    for (int i = 0; i < M; i++)
+    for (int i = 0; i <= M; i++)
     {
         elements[i] = originalNode.entries[i];
     }
-
-    elements[M] = extraElement;
 
     node firstNewNode;
     node secondNewNode;
@@ -337,10 +244,14 @@ void linearSplitNode(node originalNode, Element extraElement, node *newNode1, no
     initializeNode(&firstNewNode);
     initializeNode(&secondNewNode);
 
+    firstNewNode.isLeaf = originalNode.isLeaf;
+    secondNewNode.isLeaf = originalNode.isLeaf;
+
     Element firstElementOfFirstNewNode;
     Element firstElementOfSecondNewNode;
 
-    linearPickSeeds(elements, &firstElementOfFirstNewNode, &firstElementOfSecondNewNode);
+    if (isLinear) linearPickSeeds(elements, &firstElementOfFirstNewNode, &firstElementOfSecondNewNode);
+    else quadraticPickSeeds(elements, &firstElementOfFirstNewNode, &firstElementOfSecondNewNode);
 
     insertElementIntoNode(&firstNewNode, firstElementOfFirstNewNode);
     insertElementIntoNode(&secondNewNode, firstElementOfSecondNewNode);
@@ -443,4 +354,6 @@ void linearSplitNode(node originalNode, Element extraElement, node *newNode1, no
     printf("end split\n");
     *newNode1 = firstNewNode;
     *newNode2 = secondNewNode;
+
+    adjustParent(&originalNode, newNode1, newNode2);
 }

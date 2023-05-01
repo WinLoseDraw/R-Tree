@@ -4,7 +4,6 @@
 #include <limits.h>
 #include "rtree.h"
 
-
 void mergeMBR(node* n1, Element ele) {
     for (int i=0; i<N; ++i) {
         n1->MBR[i][0] = min(n1->MBR[i][0], ele.MBR[i][0]);
@@ -49,8 +48,9 @@ void insert(rtree *tr, Element ele) {
     node *n2 = createNewNode();
     n1->isLeaf = n2->isLeaf = true;
 
-    linearSplitNode(*leaf, ele, n1, n2);
-    
+    insertElementIntoNode(leaf, ele);
+    splitNode(*leaf, n1, n2, true);
+
     adjust_tree(tr, n1, NULL);
     adjust_tree(tr, n2, NULL);
     
@@ -93,7 +93,7 @@ void adjust_tree(rtree *tree, node *n, node *child) {
         node* n1 = createNewNode();
         node* n2 = createNewNode();
         printf("Split the node\n");
-        linearSplitNode(*n, n->entries[0], n1, n2);
+        splitNode(*n, n1, n2, 1);
         
         node *root = createNewNode();
         root->isLeaf = false;
@@ -127,7 +127,10 @@ void adjust_tree(rtree *tree, node *n, node *child) {
 
     if (n->count > M) {
         node *n1, *n2;
-        linearSplitNode(*n, n->entries[0], n1, n2);
+        n1 = createNewNode();
+        n2 = createNewNode();
+
+        splitNode(*n, n1, n2, true);
  
         ++n->parent->count;
 

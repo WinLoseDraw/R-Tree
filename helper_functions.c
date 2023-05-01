@@ -77,6 +77,7 @@ void initializeNode(node *currentNode) // used in splitnode
     currentNode->MBR[1][0] = INT_HIGH;
     currentNode->MBR[1][1] = INT_LOW;
     currentNode->count = 0;
+    currentNode->parent = NULL;
 }
 
 void updateMBRAfterInsert(node *currentNode, Element insertedElement) // updates MBR of node after every element insert

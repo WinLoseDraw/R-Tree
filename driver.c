@@ -6,9 +6,7 @@
 
 void splitNodeTest() {
     
-    node testNode;
-    initializeNode(&testNode);
-
+    node* testNode = createNewNode();
     Element testNodeEntry1;
     int testNode1MBR[N][2] = {{1, 2}, {3, 4}};
     copyCoordsToElementMBR(&testNodeEntry1, testNode1MBR);
@@ -25,22 +23,23 @@ void splitNodeTest() {
     int testNode4MBR[N][2] = {{2, 6}, {1, 8}};
     copyCoordsToElementMBR(&testNodeEntry4, testNode4MBR);
 
-    insertElementIntoNode(&testNode, testNodeEntry1);
-    insertElementIntoNode(&testNode, testNodeEntry2);
-    insertElementIntoNode(&testNode, testNodeEntry3);
-    insertElementIntoNode(&testNode, testNodeEntry4);
-
-    printf("Original Node: \n");
-    displayNode(testNode);
+    insertElementIntoNode(testNode, testNodeEntry1);
+    insertElementIntoNode(testNode, testNodeEntry2);
+    insertElementIntoNode(testNode, testNodeEntry3);
+    insertElementIntoNode(testNode, testNodeEntry4);
 
     Element extraElement;
     int extraElementMBR[N][2] = {{5, 7}, {2, 5}};
     copyCoordsToElementMBR(&extraElement, extraElementMBR);
-    printf("Extra Entry: MBR ((%d, %d), (%d, %d))\n", extraElementMBR[0][0], extraElementMBR[0][1], extraElementMBR[1][0], extraElementMBR[1][1]);
+
+    insertElementIntoNode(testNode, extraElement);
+    
+    printf("Original Node: \n");
+    displayNode(*testNode);
 
     node newNode1, newNode2;
-
-    linearSplitNode(testNode, extraElement, &newNode1, &newNode2);
+    testNode->parent = NULL;
+    splitNode(*testNode, &newNode1, &newNode2, true);
 
     printf("\n\nNew nodes: \n\nNode 1:\n");
     displayNode(newNode1);
@@ -62,7 +61,6 @@ void bfs(node* a) {
             printf("%d %d %d %d\n", arr[index]->entries[i].MBR[0][0], arr[index]->entries[i].MBR[0][1], arr[index]->entries[i].MBR[1][0], arr[index]->entries[i].MBR[1][1]);
             arr[last] = arr[index]->entries[i].childPointer;
             last += 1;
-            printf("\n");
         }
 
         index += 1;
@@ -100,6 +98,6 @@ void insertTest(){
 int main()
 {
     splitNodeTest();
-    //insertTest();
+    // insertTest();
     return 0;
 }
