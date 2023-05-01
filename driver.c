@@ -5,8 +5,14 @@
 #include "insert.h"
 
 void splitNodeTest() {
+
+    printf("Starting split node test...\n\n");
     
-    node* testNode = createNewNode();
+    node testNode;
+    initializeNode(&testNode);
+
+    printf("Initialized Node\n");
+
     Element testNodeEntry1;
     int testNode1MBR[N][2] = {{1, 2}, {3, 4}};
     copyCoordsToElementMBR(&testNodeEntry1, testNode1MBR);
@@ -23,23 +29,23 @@ void splitNodeTest() {
     int testNode4MBR[N][2] = {{2, 6}, {1, 8}};
     copyCoordsToElementMBR(&testNodeEntry4, testNode4MBR);
 
-    insertElementIntoNode(testNode, testNodeEntry1);
-    insertElementIntoNode(testNode, testNodeEntry2);
-    insertElementIntoNode(testNode, testNodeEntry3);
-    insertElementIntoNode(testNode, testNodeEntry4);
+    insertElementIntoNode(&testNode, testNodeEntry1);
+    insertElementIntoNode(&testNode, testNodeEntry2);
+    insertElementIntoNode(&testNode, testNodeEntry3);
+    insertElementIntoNode(&testNode, testNodeEntry4);
 
     Element extraElement;
     int extraElementMBR[N][2] = {{5, 7}, {2, 5}};
     copyCoordsToElementMBR(&extraElement, extraElementMBR);
 
-    insertElementIntoNode(testNode, extraElement);
+    insertElementIntoNode(&testNode, extraElement);
     
     printf("Original Node: \n");
-    displayNode(*testNode);
+    displayNode(testNode);
 
     node newNode1, newNode2;
-    testNode->parent = NULL;
-    splitNode(*testNode, &newNode1, &newNode2, true);
+    testNode.parent = NULL;
+    splitNode(testNode, &newNode1, &newNode2, true);
 
     printf("\n\nNew nodes: \n\nNode 1:\n");
     displayNode(newNode1);

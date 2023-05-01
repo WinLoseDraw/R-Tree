@@ -22,7 +22,7 @@ struct rtree_node {
     bool isLeaf;
     int count;
     int MBR[N][2];
-    Element entries[M];
+    Element entries[M+1];
     struct rtree_node* parent;
 };
 
