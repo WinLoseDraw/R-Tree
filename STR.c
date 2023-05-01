@@ -1,5 +1,4 @@
 #include "rtree.h"
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -37,21 +36,21 @@ void insertionSort2(Element* data, int start, int end, int dimension) {
     }
 }
 
-int min(int a, int b) {
-    if (a < b) {
-        return a;
-    }
+// int min(int a, int b) {
+//     if (a < b) {
+//         return a;
+//     }
 
-    return b;
-}
+//     return b;
+// }
 
-int max(int a, int b) {
-    if (a > b) {
-        return a;
-    }
+// int max(int a, int b) {
+//     if (a > b) {
+//         return a;
+//     }
 
-    return b;
-}
+//     return b;
+// }
 
 node* construct(node** nodes, int n) {
     if (n == 1) {
@@ -192,60 +191,60 @@ void preOrder(node* a) {
     }
 }
 
-void bfs(node* a) {
-    node* arr[50];
-    int index = 0;
-    int last = 1;
-    arr[0] = a;
-    while (arr[index]) {
-        printf("%d %d %d %d\n", arr[index]->MBR[0][0], arr[index]->MBR[0][1], arr[index]->MBR[1][0], arr[index]->MBR[1][1]);
-        for (int i = 0; i < arr[index]->count; i++) {
-            arr[last] = arr[index]->entries[i].childPointer;
-            last += 1;
-        }
-        index += 1;
-    }    
-}
+// void bfs(node* a) {
+//     node* arr[50];
+//     int index = 0;
+//     int last = 1;
+//     arr[0] = a;
+//     while (arr[index]) {
+//         printf("%d %d %d %d\n", arr[index]->MBR[0][0], arr[index]->MBR[0][1], arr[index]->MBR[1][0], arr[index]->MBR[1][1]);
+//         for (int i = 0; i < arr[index]->count; i++) {
+//             arr[last] = arr[index]->entries[i].childPointer;
+//             last += 1;
+//         }
+//         index += 1;
+//     }    
+// }
 
-int main() {
-    int n = 21;
-    FILE* fptr = fopen("data.txt", "r");
-    Element dataPoints[n];
-    for (int i = 0; i < n; i++) {
-        int a, b;
-        fscanf(fptr, "%d", &a);
-        fscanf(fptr, "%d", &b);
-        dataPoints[i].MBR[0][0] = a;
-        dataPoints[i].MBR[0][1] = a;
-        dataPoints[i].MBR[1][0] = b;
-        dataPoints[i].MBR[1][1] = b;
-        dataPoints[i].childPointer = NULL;
-    }
+// int main() {
+//     int n = 21;
+//     FILE* fptr = fopen("data.txt", "r");
+//     Element dataPoints[n];
+//     for (int i = 0; i < n; i++) {
+//         int a, b;
+//         fscanf(fptr, "%d", &a);
+//         fscanf(fptr, "%d", &b);
+//         dataPoints[i].MBR[0][0] = a;
+//         dataPoints[i].MBR[0][1] = a;
+//         dataPoints[i].MBR[1][0] = b;
+//         dataPoints[i].MBR[1][1] = b;
+//         dataPoints[i].childPointer = NULL;
+//     }
 
-    // FILE* fptr = fopen("data.txt", "r");
-    // Element dataPoints[n];
-    // for (int i = 0; i < n; i++) {
-    //     int a, b;
-    //     scanf("%d", &a);
-    //     scanf("%d", &b);
-    //     dataPoints[i].MBR[0][0] = a;
-    //     dataPoints[i].MBR[0][1] = a;
-    //     dataPoints[i].MBR[1][0] = b;
-    //     dataPoints[i].MBR[1][1] = b;
-    //     dataPoints[i].childPointer = NULL;
-    // }
+//     // FILE* fptr = fopen("data.txt", "r");
+//     // Element dataPoints[n];
+//     // for (int i = 0; i < n; i++) {
+//     //     int a, b;
+//     //     scanf("%d", &a);
+//     //     scanf("%d", &b);
+//     //     dataPoints[i].MBR[0][0] = a;
+//     //     dataPoints[i].MBR[0][1] = a;
+//     //     dataPoints[i].MBR[1][0] = b;
+//     //     dataPoints[i].MBR[1][1] = b;
+//     //     dataPoints[i].childPointer = NULL;
+//     // }
 
-    rtree* a = createNewRtree();
+//     rtree* a = createNewRtree();
     
-    STR(dataPoints, n, a);
+//     STR(dataPoints, n, a);
 
-    printf("%d\n", a->root->MBR[1][1]);
-    for (int i = 0; i < a->root->count; i++) {
-        printf("%d ", a->root->entries[i].MBR[1][1]);
-    }
-    printf("\n");
+//     printf("%d\n", a->root->MBR[1][1]);
+//     for (int i = 0; i < a->root->count; i++) {
+//         printf("%d ", a->root->entries[i].MBR[1][1]);
+//     }
+//     printf("\n");
 
-    bfs(a->root);
+//     bfs(a->root);
     
-}
+// }
 

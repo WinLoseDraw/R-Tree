@@ -36,7 +36,7 @@ int calcEnlargement(int r1[N][2], int r2[N][2]) {
 void insert(rtree *tr, Element ele) {
     //printf("Hello\n");
     node *leaf = choose_leaf(tr, ele);
-    printf("Chosen leaf is %d %d %d %d\n", leaf->MBR[0][0], leaf->MBR[0][1], leaf->MBR[1][0], leaf->MBR[1][1]);
+    // printf("Chosen leaf is %d %d %d %d\n", leaf->MBR[0][0], leaf->MBR[0][1], leaf->MBR[1][0], leaf->MBR[1][1]);
     //printf("Hello2\n");
 
     if (leaf->count <= M) {
@@ -92,7 +92,7 @@ node *choose_leaf(rtree *tr, Element ele) {
 
 void adjust_tree(rtree *tree, node *n, node *child) {
     if (n->parent == NULL) {
-        printf("adjust count: %d\n", n->count);
+        // printf("adjust count: %d\n", n->count);
         //printf("MBR: %d %d %d %d\n", n->MBR[0][0], n->MBR[0][1], n->MBR[1][0], n->MBR[1][1]);
         for (int i = 0; i < n->count; i++) {
             mergeMBR(n, n->entries[i]);
@@ -100,7 +100,7 @@ void adjust_tree(rtree *tree, node *n, node *child) {
         if (n->count <= M) return;
         node* n1 = createNewNode();
         node* n2 = createNewNode();
-        printf("Split the node\n");
+        // printf("Split the node\n");
         splitNode(n, n1, n2, false);
         
         node *root = createNewNode();

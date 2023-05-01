@@ -3,6 +3,8 @@
 #include "helper_functions.h"
 #include "splitnode.h"
 #include "insert.h"
+#include "preorder.h"
+#include "search.h"
 
 void splitNodeTest() {
 
@@ -11,7 +13,7 @@ void splitNodeTest() {
     node testNode;
     initializeNode(&testNode);
 
-    printf("Initialized Node\n");
+    // printf("Initialized Node\n");
 
     Element testNodeEntry1;
     int testNode1MBR[N][2] = {{1, 2}, {3, 4}};
@@ -109,9 +111,65 @@ void insertTest(){
 
 }
 
+
+void searchTest() {
+    rtree* a = createNewRtree();
+    node* root = createNewNode();
+    a->root = root;
+
+    int n = 21;
+    FILE* fptr = fopen("data.txt", "r");
+    Element dataPoints[n];
+    
+    for (int i = 0; i < n; i++) {
+        int a, b;
+        fscanf(fptr, "%d", &a);
+        fscanf(fptr, "%d", &b);
+        dataPoints[i].MBR[0][0] = a;
+        dataPoints[i].MBR[0][1] = a;
+        dataPoints[i].MBR[1][0] = b;
+        dataPoints[i].MBR[1][1] = b;
+        dataPoints[i].childPointer = NULL;
+    }
+
+    for (int i = 0; i < n; i++) {
+        printf("%d: %d %d %d %d\n", i, dataPoints[i].MBR[0][0], dataPoints[i].MBR[0][1], dataPoints[i].MBR[1][0], dataPoints[i].MBR[1][1]);
+    }
+
+    for (int i = 0; i < n; i++) {
+        insert(a, dataPoints[i]);
+    }
+
+    printf("\nInserted data points, tree created.\n\n");
+
+    int searchSpace[N][2] = {{3, 10}, {2, 8}};
+    Element **result = NULL;
+    int resultCount = 0;
+
+    printf("Searching: \n");
+
+    search_rtree(a->root, searchSpace, &result, &resultCount);
+
+    printf("Search Results:\n");
+    if (resultCount > 0)
+    {
+        printf("Results Found. \n");
+        for (int i = 0; i < resultCount; i++)
+        {
+            
+            printf("(%d, %d, %d, %d)\n", result[i]->MBR[0][0], result[i]->MBR[0][1], result[i]->MBR[1][0], result[i]->MBR[1][1]);
+        }
+    }
+    else
+    {
+        printf("No results found.\n");
+    }
+}
+
+
 int main()
 {
     //splitNodeTest();
-    insertTest();
+    searchTest();
     return 0;
 }

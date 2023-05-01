@@ -118,10 +118,10 @@ void adjustParent(node* leaf, node* n1, node* n2) {
         n1->parent = leaf->parent;
         n2->parent = leaf->parent;
 
-        printf("Adjusting Parent\n");
+        // printf("Adjusting Parent\n");
         for (int i = 0; i < leaf->parent->count; i++) {
             if (leaf->parent->entries[i].childPointer == leaf) {
-                printf("Match found at i = %d\n", i);
+                // printf("Match found at i = %d\n", i);
                 for (int j = i+1; j < leaf->parent->count; j++) {
                     leaf->parent->entries[j-1] = leaf->parent->entries[j];
                 }
@@ -240,8 +240,8 @@ void updateChildPointer(node* currentNode, Element* e) {
 
 void splitNode(node* originalNode, node *newNode1, node *newNode2, bool isLinear)
 {
-    printf("start split\n");
-    printf("MBR: %d %d %d %d\n", originalNode->MBR[0][0], originalNode->MBR[0][1], originalNode->MBR[1][0], originalNode->MBR[1][1]);
+    // printf("start split\n");
+    // printf("MBR: %d %d %d %d\n", originalNode->MBR[0][0], originalNode->MBR[0][1], originalNode->MBR[1][0], originalNode->MBR[1][1]);
 
     node firstNewNode;
     node secondNewNode;
@@ -374,7 +374,7 @@ void splitNode(node* originalNode, node *newNode1, node *newNode2, bool isLinear
 
         remainingCount--;
     }
-    printf("end split\n");
+    // printf("end split\n");
     *newNode1 = firstNewNode;
     *newNode2 = secondNewNode;
 
