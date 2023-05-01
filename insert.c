@@ -34,9 +34,12 @@ int calcEnlargement(int r1[N][2], int r2[N][2]) {
 }
 
 void insert(rtree *tr, Element ele) {
+    //printf("Hello\n");
     node *leaf = choose_leaf(tr, ele);
+    printf("Chosen leaf is %d %d %d %d\n", leaf->MBR[0][0], leaf->MBR[0][1], leaf->MBR[1][0], leaf->MBR[1][1]);
+    //printf("Hello2\n");
 
-    if (leaf->count < M) {
+    if (leaf->count <= M) {
         ele.childPointer = NULL;
         insertElementIntoNode(leaf, ele);
 
@@ -44,21 +47,22 @@ void insert(rtree *tr, Element ele) {
         return;
     }
 
-    node *n1 = createNewNode();
-    node *n2 = createNewNode();
-    n1->isLeaf = n2->isLeaf = true;
+    // node *n1 = createNewNode();
+    // node *n2 = createNewNode();
+    // n1->isLeaf = n2->isLeaf = true;
 
-    insertElementIntoNode(leaf, ele);
-    splitNode(*leaf, n1, n2, true);
+    // insertElementIntoNode(leaf, ele);
+    // splitNode(*leaf, n1, n2, true);
 
-    adjust_tree(tr, n1, NULL);
-    adjust_tree(tr, n2, NULL);
+    // adjust_tree(tr, n1, NULL);
+    // adjust_tree(tr, n2, NULL);
     
     return;
 }
 
 node *choose_leaf(rtree *tr, Element ele) {
     node *n = tr->root;
+
 
     while (!n->isLeaf) {
         int min_enlargement = INT_MAX;
@@ -89,11 +93,15 @@ node *choose_leaf(rtree *tr, Element ele) {
 void adjust_tree(rtree *tree, node *n, node *child) {
     if (n->parent == NULL) {
         printf("adjust count: %d\n", n->count);
+        //printf("MBR: %d %d %d %d\n", n->MBR[0][0], n->MBR[0][1], n->MBR[1][0], n->MBR[1][1]);
+        for (int i = 0; i < n->count; i++) {
+            mergeMBR(n, n->entries[i]);
+        }
         if (n->count <= M) return;
         node* n1 = createNewNode();
         node* n2 = createNewNode();
         printf("Split the node\n");
-        splitNode(*n, n1, n2, 1);
+        splitNode(n, n1, n2, false);
         
         node *root = createNewNode();
         root->isLeaf = false;
@@ -120,22 +128,31 @@ void adjust_tree(rtree *tree, node *n, node *child) {
         root->MBR[1][1] = max(temp1.MBR[1][1], temp2.MBR[1][1]);
 
         tree->root = root;
+        root->count = 2;
 
         return;
     }
-    mergeMBR(n->parent, n->entries[0]);
+
+    for (int i = 0; i < n->count; i++) {
+        mergeMBR(n, n->entries[i]);
+    }
+    
 
     if (n->count > M) {
         node *n1, *n2;
         n1 = createNewNode();
         n2 = createNewNode();
 
-        splitNode(*n, n1, n2, true);
- 
-        ++n->parent->count;
+        
+
+        splitNode(n, n1, n2, false); 
+        n1->parent = n->parent;
+        n2->parent = n->parent;
+        //++n->parent->count;
+        
 
         adjust_tree(tree, n->parent, n1);
-        adjust_tree(tree, n->parent, n2);
+        //adjust_tree(tree, n->parent, n2);
 
     } else {
        adjust_tree(tree, n->parent, n);

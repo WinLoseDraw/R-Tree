@@ -90,8 +90,23 @@ void updateMBRAfterInsert(node *currentNode, Element insertedElement) // updates
 
 void insertElementIntoNode(node *currentNode, Element e)
 {
+    // printf("Inserting element into node %d %d %d %d with count %d\n", currentNode->MBR[0][0], currentNode->MBR[0][1], currentNode->MBR[1][0], currentNode->MBR[1][1], currentNode->count);
     currentNode->entries[currentNode->count++] = e;
     updateMBRAfterInsert(currentNode, e);
+    if (currentNode->parent) {
+        printf("Parent has MBR %d %d %d %d\n", currentNode->parent->MBR[0][0], currentNode->parent->MBR[0][1], currentNode->parent->MBR[1][0], currentNode->parent->MBR[1][1]);
+        for (int i = 0; i < currentNode->parent->count; i++) {
+            printf("Finding insert match %d\n", i);
+            if (currentNode->parent->entries[i].childPointer == currentNode) {
+                printf("Insert Match found at i = %d\n", i);
+                currentNode->parent->entries[i].MBR[0][0] = currentNode->MBR[0][0];
+                currentNode->parent->entries[i].MBR[0][1] = currentNode->MBR[0][1];
+                currentNode->parent->entries[i].MBR[1][0] = currentNode->MBR[1][0];
+                currentNode->parent->entries[i].MBR[1][1] = currentNode->MBR[1][1];
+                break;
+            }
+        }
+    }
 }
 
 rtree* createNewRtree() {

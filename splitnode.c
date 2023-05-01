@@ -114,11 +114,15 @@ Element pickNext(node group1, node group2, Element originalElements[M + 1])
 
 void adjustParent(node* leaf, node* n1, node* n2) {
     if (leaf->parent) {
-        printf("here\n");
-        printf("%p\n", leaf->parent);
+
+        n1->parent = leaf->parent;
+        n2->parent = leaf->parent;
+
+        printf("Adjusting Parent\n");
         for (int i = 0; i < leaf->parent->count; i++) {
             if (leaf->parent->entries[i].childPointer == leaf) {
-                for (int j = i+1; j < leaf->parent->count; i++) {
+                printf("Match found at i = %d\n", i);
+                for (int j = i+1; j < leaf->parent->count; j++) {
                     leaf->parent->entries[j-1] = leaf->parent->entries[j];
                 }
                 break;
@@ -132,8 +136,9 @@ void adjustParent(node* leaf, node* n1, node* n2) {
         temp.MBR[0][1] = n1->MBR[0][1];
         temp.MBR[1][0] = n1->MBR[1][0];
         temp.MBR[1][1] = n1->MBR[1][1];
-        leaf->parent->entries[leaf->parent->count] = temp;
-        leaf->parent->count += 1;
+
+
+        insertElementIntoNode(leaf->parent, temp);
 
         Element temp2;
         temp2.childPointer = n2;
@@ -142,8 +147,7 @@ void adjustParent(node* leaf, node* n1, node* n2) {
         temp2.MBR[1][0] = n2->MBR[1][0];
         temp2.MBR[1][1] = n2->MBR[1][1];
 
-        leaf->parent->entries[leaf->parent->count] = temp2;
-        leaf->parent->count += 1;
+        insertElementIntoNode(leaf->parent, temp2);
     }
 }
 
@@ -228,15 +232,16 @@ void linearPickSeeds(Element elementArray[M + 1], Element *firstElement, Element
     }
 }
 
-void splitNode(node originalNode, node *newNode1, node *newNode2, bool isLinear)
+void updateChildPointer(node* currentNode, Element* e) {
+    if (e->childPointer) {
+        e->childPointer->parent = currentNode;
+    }
+}
+
+void splitNode(node* originalNode, node *newNode1, node *newNode2, bool isLinear)
 {
     printf("start split\n");
-    Element elements[M + 1];
-
-    for (int i = 0; i <= M; i++)
-    {
-        elements[i] = originalNode.entries[i];
-    }
+    printf("MBR: %d %d %d %d\n", originalNode->MBR[0][0], originalNode->MBR[0][1], originalNode->MBR[1][0], originalNode->MBR[1][1]);
 
     node firstNewNode;
     node secondNewNode;
@@ -244,14 +249,19 @@ void splitNode(node originalNode, node *newNode1, node *newNode2, bool isLinear)
     initializeNode(&firstNewNode);
     initializeNode(&secondNewNode);
 
-    firstNewNode.isLeaf = originalNode.isLeaf;
-    secondNewNode.isLeaf = originalNode.isLeaf;
+    firstNewNode.isLeaf = originalNode->isLeaf;
+    secondNewNode.isLeaf = originalNode->isLeaf;
+    // firstNewNode.parent = originalNode.parent;
+    // secondNewNode.parent = originalNode.parent;
 
     Element firstElementOfFirstNewNode;
     Element firstElementOfSecondNewNode;
 
-    if (isLinear) linearPickSeeds(elements, &firstElementOfFirstNewNode, &firstElementOfSecondNewNode);
-    else quadraticPickSeeds(elements, &firstElementOfFirstNewNode, &firstElementOfSecondNewNode);
+    if (isLinear) linearPickSeeds(originalNode->entries, &firstElementOfFirstNewNode, &firstElementOfSecondNewNode);
+    else quadraticPickSeeds(originalNode->entries, &firstElementOfFirstNewNode, &firstElementOfSecondNewNode);
+
+    updateChildPointer(newNode1, &firstElementOfFirstNewNode);
+    updateChildPointer(newNode2, &firstElementOfSecondNewNode);
 
     insertElementIntoNode(&firstNewNode, firstElementOfFirstNewNode);
     insertElementIntoNode(&secondNewNode, firstElementOfSecondNewNode);
@@ -269,14 +279,15 @@ void splitNode(node originalNode, node *newNode1, node *newNode2, bool isLinear)
             while (remainingCount > 0)
             {
 
-                if (isDummyElement(elements[index]))
+                if (isDummyElement(originalNode->entries[index]))
                 {
                     index++;
                     continue;
                 }
                 else
                 {
-                    insertElementIntoNode(&firstNewNode, elements[index]);
+                    updateChildPointer(newNode1, originalNode->entries + index);
+                    insertElementIntoNode(&firstNewNode, originalNode->entries[index]);
                     remainingCount--;
                 }
             }
@@ -292,14 +303,15 @@ void splitNode(node originalNode, node *newNode1, node *newNode2, bool isLinear)
             while (remainingCount > 0)
             {
 
-                if (isDummyElement(elements[index]))
+                if (isDummyElement(originalNode->entries[index]))
                 {
                     index++;
                     continue;
                 }
                 else
                 {
-                    insertElementIntoNode(&secondNewNode, elements[index]);
+                    updateChildPointer(newNode2, originalNode->entries + index);
+                    insertElementIntoNode(&secondNewNode, originalNode->entries[index]);
                     remainingCount--;
                 }
             }
@@ -307,7 +319,7 @@ void splitNode(node originalNode, node *newNode1, node *newNode2, bool isLinear)
             break;
         }
 
-        Element nextElement = pickNext(firstNewNode, secondNewNode, elements);
+        Element nextElement = pickNext(firstNewNode, secondNewNode, originalNode->entries);
 
         if (isDummyElement(nextElement))
             break; // entries are finished
@@ -317,11 +329,14 @@ void splitNode(node originalNode, node *newNode1, node *newNode2, bool isLinear)
 
         if (cost1 < cost2)
         {
+            updateChildPointer(newNode1, &nextElement);
             insertElementIntoNode(&firstNewNode, nextElement);
         }
         else if (cost2 < cost1)
         {
+            updateChildPointer(newNode2, &nextElement);
             insertElementIntoNode(&secondNewNode, nextElement);
+           
         }
         else
         {
@@ -330,21 +345,29 @@ void splitNode(node originalNode, node *newNode1, node *newNode2, bool isLinear)
 
             if (area1 < area2)
             {
+                updateChildPointer(newNode1, &nextElement);
                 insertElementIntoNode(&firstNewNode, nextElement);
+                
             }
             else if (area1 > area2)
             {
+                updateChildPointer(newNode2, &nextElement);
                 insertElementIntoNode(&secondNewNode, nextElement);
+                
             }
             else
             {
                 if (firstNewNode.count < secondNewNode.count)
+                
                 {
+                     updateChildPointer(newNode1, &nextElement);
                     insertElementIntoNode(&firstNewNode, nextElement);
                 }
                 else
                 {
+                    updateChildPointer(newNode2, &nextElement);
                     insertElementIntoNode(&secondNewNode, nextElement);
+                    
                 }
             }
         }
@@ -355,5 +378,5 @@ void splitNode(node originalNode, node *newNode1, node *newNode2, bool isLinear)
     *newNode1 = firstNewNode;
     *newNode2 = secondNewNode;
 
-    adjustParent(&originalNode, newNode1, newNode2);
+    adjustParent(originalNode, newNode1, newNode2);
 }

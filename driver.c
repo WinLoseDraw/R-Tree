@@ -45,7 +45,7 @@ void splitNodeTest() {
 
     node newNode1, newNode2;
     testNode.parent = NULL;
-    splitNode(testNode, &newNode1, &newNode2, true);
+    splitNode(&testNode, &newNode1, &newNode2, true);
 
     printf("\n\nNew nodes: \n\nNode 1:\n");
     displayNode(newNode1);
@@ -94,16 +94,24 @@ void insertTest(){
     }
 
     for (int i = 0; i < n; i++) {
+        printf("%d %d %d %d %d\n", i, dataPoints[i].MBR[0][0], dataPoints[i].MBR[0][1], dataPoints[i].MBR[1][0], dataPoints[i].MBR[1][1]);
+    }
+
+    for (int i = 0; i < n; i++) {
         printf("i: %d\n", i);
         insert(a, dataPoints[i]);
         bfs(a->root);
+        printf("\n");
     }
+
+    printf("\n\n\n");
+    bfs(a->root);
 
 }
 
 int main()
 {
-    splitNodeTest();
-    // insertTest();
+    //splitNodeTest();
+    insertTest();
     return 0;
 }
