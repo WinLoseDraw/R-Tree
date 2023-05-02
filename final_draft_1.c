@@ -757,7 +757,7 @@ void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear
 
 //----------------------------------------------------------Insert begins-----------------------------------------------------//
 
-void mergeMBR(node *n1, Element ele)
+void mergeMBR(node *n1, Element ele) //updates the MBR of the node n1 to include the MBR of ele
 {
     for (int i = 0; i < N; ++i)
     {
@@ -766,7 +766,7 @@ void mergeMBR(node *n1, Element ele)
     }
 }
 
-int calcEnlargement(int r1[N][2], int r2[N][2])
+int calcEnlargement(int r1[N][2], int r2[N][2]) //calculate the enlargement needed to fit both MBRs in one MBR
 {
     int newRect[N][2];
 
@@ -791,7 +791,7 @@ int calcEnlargement(int r1[N][2], int r2[N][2])
 }
 
 
-node *choose_leaf(rtree *tr, Element ele)
+node *choose_leaf(rtree *tr, Element ele) //chooses a leaf node using a greedy approach where we would insert the element
 {
     node *n = tr->root;
 
@@ -825,7 +825,8 @@ node *choose_leaf(rtree *tr, Element ele)
     return n;
 }
 
-void adjust_tree(rtree *tree, node *n, node *child)
+void adjust_tree(rtree *tree, node *n, node *child) //adjusts the tree by accounting for the update in MBRs of all the
+                                                    //nodes from leaf to parents and performs splitNode wherever there is an overflow on the way up
 {
     if (n->parent == NULL){
         for (int i = 0; i < n->count; i++)
