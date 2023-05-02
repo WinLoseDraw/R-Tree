@@ -73,17 +73,17 @@ Convention followed for MBR.
 1, 1 = y2
 */
 
-int area(int x1, int x2, int y1, int y2)
+long area(int x1, int x2, int y1, int y2)
 {
     return (x2 - x1) * (y2 - y1);
 }
 
-int areaOfElementMBR(Element e)
+long areaOfElementMBR(Element e)
 {
     return area(e.MBR[0][0], e.MBR[0][1], e.MBR[1][0], e.MBR[1][1]);
 }
 
-int areaOfNodeMBR(node n)
+long areaOfNodeMBR(node n)
 {
     return area(n.MBR[0][0], n.MBR[0][1], n.MBR[1][0], n.MBR[1][1]);
 }
@@ -407,20 +407,19 @@ void setAsDummyElement(Element *e) // sets an element as a dummy
     }
 }
 
-int calculateTempArea(Element e1, Element e2) // used in pickseeds
+long calculateTempArea(Element e1, Element e2) // used in pickseeds
 {
     return area(min(e1.MBR[0][0], e2.MBR[0][0]), max(e1.MBR[0][1], e2.MBR[0][1]), min(e1.MBR[1][0], e2.MBR[1][0]), max(e1.MBR[1][1], e2.MBR[1][1]));
 }
 
 void quadraticPickSeeds(Element elementArray[M + 1], Element *firstElement, Element *secondElement) // pick the first element of each new node in quadratic time
 {
-
-    int maxWastedArea = -1;
-    int maxI, maxJ;
-    int wastedArea, tempArea;
+    int maxWastedArea = INT_MIN;
+    int maxI = -1, maxJ = -1;
+    long wastedArea = 0, tempArea = 0;
     Element e1, e2;
 
-    for (int i = 0; i < M; i++)
+    for (int i = 0; i < M + 1; i++)
     {
         for (int j = i + 1; j < M + 1; j++)
         {
@@ -428,7 +427,7 @@ void quadraticPickSeeds(Element elementArray[M + 1], Element *firstElement, Elem
             e1 = elementArray[i];
             e2 = elementArray[j];
 
-            int tempArea = calculateTempArea(e1, e2);
+            tempArea = calculateTempArea(e1, e2);
             wastedArea = tempArea - areaOfElementMBR(e1) - areaOfElementMBR(e2);
 
             if (wastedArea > maxWastedArea)
@@ -446,19 +445,19 @@ void quadraticPickSeeds(Element elementArray[M + 1], Element *firstElement, Elem
     setAsDummyElement(elementArray + maxJ); // set the selected seeds as dummy elements
 }
 
-int calculateCost(Element e1, node group) // used in picknext
+long calculateCost(Element e1, node group) // used in picknext
 {
-    int totalArea = area(min(e1.MBR[0][0], group.MBR[0][0]), max(e1.MBR[0][1], group.MBR[0][1]), min(e1.MBR[1][0], group.MBR[1][0]), max(e1.MBR[1][1], group.MBR[1][1]));
-    int groupArea = areaOfNodeMBR(group);
-    int cost = totalArea - groupArea;
+    long totalArea = area(min(e1.MBR[0][0], group.MBR[0][0]), max(e1.MBR[0][1], group.MBR[0][1]), min(e1.MBR[1][0], group.MBR[1][0]), max(e1.MBR[1][1], group.MBR[1][1]));
+    long groupArea = areaOfNodeMBR(group);
+    long cost = totalArea - groupArea;
     return cost;
 }
 
 Element pickNext(node group1, node group2, Element originalElements[M + 1]) // select the next element to add to a node from the remaining elements
 { // may return dummy element
 
-    int d1, d2, difference;
-    int maxDifference = -1;
+    long d1, d2, difference;
+    long maxDifference = INT_MIN;
     Element returnElement;
     setAsDummyElement(&returnElement);
     int returnIndex;
@@ -528,20 +527,21 @@ void adjustParent(node *leaf, node *n1, node *n2) // remove the original node fr
 
         insertElementIntoNode(leaf->parent, temp2);
 
-        // free(leaf);
+        free(leaf);
     }
 }
 
 void linearPickSeeds(Element elementArray[M + 1], Element *firstElement, Element *secondElement) // select the first element of each new node in linear time
 {
-    int highestLowX, highestLowY = INT_MIN;
-    int lowestHighX, lowestHighY = INT_MAX;
+
+    int highestLowX = INT_MIN, highestLowY = INT_MIN;
+    int lowestHighX = INT_MAX, lowestHighY = INT_MAX;
     int highestLowXIndex, lowestHighXIndex, highestLowYIndex, lowestHighYIndex;
 
-    int minX, minY = INT_MAX;
-    int maxX, maxY = INT_MIN;
+    int minX = INT_MAX, minY = INT_MAX;
+    int maxX = INT_MIN, maxY = INT_MIN;
 
-    for (int i = 0; i < M; i++)
+    for (int i = 0; i < M + 1; i++)
     {
         Element e = elementArray[i];
 
@@ -554,48 +554,104 @@ void linearPickSeeds(Element elementArray[M + 1], Element *firstElement, Element
         {
             minX = low_x;
         }
-        else if (low_x > highestLowX)
-        {
-            highestLowX = low_x;
-            highestLowXIndex = i;
-        }
-
-        if (low_y < minY)
-        {
-            minY = low_y;
-        }
-        else if (low_y > highestLowY)
-        {
-            highestLowY = low_y;
-            highestLowYIndex = i;
-        }
-
         if (high_x > maxX)
         {
             maxX = high_x;
         }
-        else if (high_x < lowestHighX)
+        if (low_y < minY)
         {
-            lowestHighX = high_x;
-            lowestHighXIndex = i;
+            minY = low_y;
         }
-
         if (high_y > maxY)
         {
             maxY = high_y;
         }
-        else if (high_y < lowestHighY)
+    }
+
+    for (int i = 0; i < M + 1; i++)
+    {
+        Element e = elementArray[i];
+
+        int low_x = e.MBR[0][0];
+        int high_x = e.MBR[0][1];
+        int low_y = e.MBR[1][0];
+        int high_y = e.MBR[1][1];
+
+        if (low_x > highestLowX)
+        {
+            highestLowX = low_x;
+            highestLowXIndex = i;
+        } 
+    }
+
+    for (int i = 0; i < M + 1; i++)
+    {
+        if (i == highestLowXIndex) continue;
+
+        Element e = elementArray[i];
+
+        int low_x = e.MBR[0][0];
+        int high_x = e.MBR[0][1];
+        int low_y = e.MBR[1][0];
+        int high_y = e.MBR[1][1];
+
+        if (high_x < lowestHighX)
+        {
+            lowestHighX = high_x;
+            lowestHighXIndex = i;
+        }
+    }
+
+    for (int i = 0; i < M + 1; i++)
+    {
+        Element e = elementArray[i];
+
+        int low_x = e.MBR[0][0];
+        int high_x = e.MBR[0][1];
+        int low_y = e.MBR[1][0];
+        int high_y = e.MBR[1][1];
+
+        if (low_y > highestLowY)
+        {
+            highestLowY = low_y;
+            highestLowYIndex = i;
+        }
+    }
+
+    for (int i = 0; i < M + 1; i++)
+    {
+        if (i == highestLowYIndex) continue;
+
+        Element e = elementArray[i];
+
+        int low_x = e.MBR[0][0];
+        int high_x = e.MBR[0][1];
+        int low_y = e.MBR[1][0];
+        int high_y = e.MBR[1][1];
+
+        if (high_y < lowestHighY)
         {
             lowestHighY = high_y;
             lowestHighYIndex = i;
         }
     }
-
+        
     int widthX = maxX - minX;
     int widthY = maxY - minY;
+    int normalizedSeparationX, normalizedSeparationY;
 
-    int normalizedSeparationX = (highestLowX - lowestHighX) / widthX;
-    int normalizedSeparationY = (highestLowY - lowestHighY) / widthY;
+    if (widthY > 0) {
+        normalizedSeparationY = (highestLowY - lowestHighY) / widthY;
+    } else {
+        normalizedSeparationY = INT_MIN;
+    }
+
+
+    if (widthX > 0) {
+        normalizedSeparationX = (highestLowX - lowestHighX) / widthX;
+    } else {
+        normalizedSeparationX = INT_MIN;
+    }
 
     // After finding the normalized separation along both dimensions, we select the ones with greater separation
 
@@ -625,13 +681,14 @@ void updateChildPointer(node *currentNode, Element *e) // set the parent of the 
 
 void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear) // takes in an original node and splits it into two new nodes
 {
+
     newNode1->isLeaf = originalNode->isLeaf;
     newNode2->isLeaf = originalNode->isLeaf;
 
     Element firstElementOfFirstNewNode;
     Element firstElementOfSecondNewNode;
 
-    if (isLinear) // use linearPickSeeds if isLinear is true, else use quadraticPickSeeds
+  if (isLinear) // use linearPickSeeds if isLinear is true, else use quadraticPickSeeds
         linearPickSeeds(originalNode->entries, &firstElementOfFirstNewNode, &firstElementOfSecondNewNode);
     else
         quadraticPickSeeds(originalNode->entries, &firstElementOfFirstNewNode, &firstElementOfSecondNewNode);
@@ -700,8 +757,8 @@ void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear
         if (isDummyElement(nextElement))
             break; // entries are finished
 
-        int cost1 = calculateCost(nextElement, *newNode1);
-        int cost2 = calculateCost(nextElement, *newNode2);
+        long cost1 = calculateCost(nextElement, *newNode1);
+        long cost2 = calculateCost(nextElement, *newNode2);
 
         if (cost1 < cost2) // add to the one with lower cost
         {
@@ -715,8 +772,8 @@ void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear
         }
         else
         {
-            int area1 = areaOfNodeMBR(*newNode1);
-            int area2 = areaOfNodeMBR(*newNode2);
+            long area1 = areaOfNodeMBR(*newNode1);
+            long area2 = areaOfNodeMBR(*newNode2);
 
             if (area1 < area2) // if cost is equal, add to the one with smaller area
             {
@@ -742,7 +799,7 @@ void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear
                     insertElementIntoNode(newNode2, nextElement);
                 }
             }
-        }
+        }   
 
         remainingCount--;
     }
@@ -763,7 +820,7 @@ void mergeMBR(node *n1, Element ele) //updates the MBR of the node n1 to include
     }
 }
 
-int calcEnlargement(int r1[N][2], int r2[N][2]) //calculate the enlargement needed to fit both MBRs in one MBR
+long calcEnlargement(int r1[N][2], int r2[N][2]) //calculate the enlargement needed to fit both MBRs in one MBR
 {
     int newRect[N][2];
 
@@ -775,14 +832,14 @@ int calcEnlargement(int r1[N][2], int r2[N][2]) //calculate the enlargement need
     }
 
     // Calculate the area of the new rectangle
-    int newArea = (newRect[0][1] - newRect[0][0]) * (newRect[1][1] - newRect[1][0]);
+    long newArea = (newRect[0][1] - newRect[0][0]) * (newRect[1][1] - newRect[1][0]);
 
     // Calculate the area of the two original rectangles
-    int area1 = (r1[0][1] - r1[0][0]) * (r1[1][1] - r1[1][0]);
-    int area2 = (r2[0][1] - r2[0][0]) * (r2[1][1] - r2[1][0]);
+    long area1 = (r1[0][1] - r1[0][0]) * (r1[1][1] - r1[1][0]);
+    long area2 = (r2[0][1] - r2[0][0]) * (r2[1][1] - r2[1][0]);
 
     // Calculate the enlargement as the difference between the area of the new rectangle and the sum of the areas of the two original rectangles
-    int enlargement = newArea - area1 - area2;
+    long enlargement = newArea - area1 - area2;
 
     return enlargement;
 }
@@ -794,14 +851,14 @@ node *choose_leaf(rtree *tr, Element ele) //chooses a leaf node using a greedy a
 
     while (!n->isLeaf)
     {
-        int min_enlargement = INT_MAX;
+        long min_enlargement = INT_MAX * 1e4;
         int min_index = -1;
-        int min_area = INT_MAX;
+        long min_area = INT_MAX * 1e4;
 
         for (int i = 0; i < n->count; i++)
         {
-            int area = areaOfElementMBR(n->entries[i]);
-            int enlargement = calcEnlargement(n->entries[i].MBR, ele.MBR);
+            long area = areaOfElementMBR(n->entries[i]);
+            long enlargement = calcEnlargement(n->entries[i].MBR, ele.MBR);
 
             if (enlargement < min_enlargement)
             {
@@ -835,7 +892,7 @@ void adjust_tree(rtree *tree, node *n, node *child) //adjusts the tree by accoun
         node *n1 = createNewNode();
         node *n2 = createNewNode();
 
-        splitNode(n, n1, n2, false);
+        splitNode(n, n1, n2, true);
 
         node *root = createNewNode();
         root->isLeaf = false;
@@ -878,7 +935,7 @@ void adjust_tree(rtree *tree, node *n, node *child) //adjusts the tree by accoun
         n1 = createNewNode();
         n2 = createNewNode();
 
-        splitNode(n, n1, n2, false);
+        splitNode(n, n1, n2, true);
         n1->parent = n->parent;
         n2->parent = n->parent;
         adjust_tree(tree, n->parent, n1);
@@ -892,6 +949,7 @@ void adjust_tree(rtree *tree, node *n, node *child) //adjusts the tree by accoun
 void insert(rtree *tr, Element ele)
 {
     node *leaf = choose_leaf(tr, ele);
+
     if (leaf->count <= M)
     {
         ele.childPointer = NULL;
