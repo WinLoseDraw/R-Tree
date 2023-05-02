@@ -61,6 +61,9 @@ int abs(int n)
 }
 
 /*
+Convention followed for MBR.
+(x1, y1) is bottom/left, (x2,y2) is top/right.
+
 0, 0 = x1
 0, 1 = x2
 1, 0 = y1
