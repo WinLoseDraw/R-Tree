@@ -912,14 +912,14 @@ void insert(rtree *tr, Element ele)
 
 //----------------------------------------------------------Preorder Traversal begins-----------------------------------------------------//
 
-void print_internal_node(node *n)
+void print_internal_node(node *n) //prints the MBR bounds for an internal node
 {
     printf("Internal Node: MBR spans from ");
     printf("(%d, %d) to (%d, %d)", n->MBR[0][0], n->MBR[1][0], n->MBR[0][1], n->MBR[1][1]);
     printf("\n\n");
 }
 
-void print_leaf_node(node *n)
+void print_leaf_node(node *n) //prints the entries of a leaf node, separated by "|"
 {
     printf("Leaf Node: contains %d %s {", n->count, (n->count > 1) ? "entries" : "entry");
     int i;
@@ -930,7 +930,7 @@ void print_leaf_node(node *n)
     printf("}\n\n");
 }
 
-void preorder_traversal(node* n) 
+void preorder_traversal(node* n) //preorder traversal: visit node, then preorder(all children)
 {
     if (n == NULL) 
         return;
@@ -978,7 +978,7 @@ int main()
 
     preorder_traversal(a->root);
 
-    int searchSpace[N][2] = {{3, 10}, {2, 8}};
+    int searchSpace[N][2] = {{3, 10}, {2, 8}}; //sample search rectangle
     /*
         Convention followed for search rectangle.
         (x1, y1) is bottom/left, (x2,y2) is top/right.
@@ -1014,7 +1014,7 @@ int main()
     }
 
 
-    int sampleX = 3, sampleY = 14;
+    int sampleX = 3, sampleY = 14; //sample point to be inserted
     printf("\nInserting a sample point (%d,%d) in the tree.\n", sampleX, sampleY);
 
     
