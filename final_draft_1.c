@@ -305,25 +305,6 @@ void STR(Element* data, int n, rtree* a) {
     a->root = construct(nodes, *p);
 }
 
-void STR(Element *data, int n, rtree *a)
-{
-    int *p = (int *)malloc(sizeof(int));
-    node **nodes = construct_leaf_pages(data, n, p);
-
-    printf("Leaf nodes\n");
-    node *nodetemp[(*p)];
-    for (int i = 0; i < *p; i++)
-    {
-        nodetemp[i] = nodes[i];
-        for (int j = 0; j < nodes[i]->count; j++)
-        {
-            printf("%d %d %d %d\n", nodes[i]->entries[j].MBR[0][0], nodes[i]->entries[j].MBR[0][1], nodes[i]->entries[j].MBR[1][0], nodes[i]->entries[j].MBR[1][1]);
-        }
-        printf("\n");
-    }
-    a->root = construct(nodes, *p);
-}
-
 //----------------------------------------------------------STR ends-----------------------------------------------------//
 
 //----------------------------------------------------------Searching begins-----------------------------------------------------//
