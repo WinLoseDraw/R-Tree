@@ -957,11 +957,11 @@ int main()
     node* root = createNewNode();
     a->root = root;
 
-    int n = 21; //number of 2D data points in data.txt
+    int numDataPoints = 21; //number of 2D data points in data.txt
     FILE* fptr = fopen("data.txt", "r");
-    Element dataPoints[n];
+    Element dataPoints[numDataPoints];
     
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < numDataPoints; i++) {
         int a, b;
         fscanf(fptr, "%d", &a);
         fscanf(fptr, "%d", &b);
@@ -972,15 +972,25 @@ int main()
         dataPoints[i].childPointer = NULL;
     }
 
-    STR(dataPoints, n, a);
+    STR(dataPoints, numDataPoints, a);
 
     printf("\nInserted data points, tree created. Now printing pre-order traversal:\n\n");
 
     preorder_traversal(a->root);
 
-    printf("\nConducting a sample search on the rectangle (3,2) to (10,8).");
-
     int searchSpace[N][2] = {{3, 10}, {2, 8}};
+    /*
+        Convention followed for search rectangle.
+        (x1, y1) is bottom/left, (x2,y2) is top/right.
+
+        0, 0 = x1
+        0, 1 = x2
+        1, 0 = y1
+        1, 1 = y2
+    */
+
+    printf("\nConducting a sample search on the rectangle (%d,%d) to (%d,%d).",searchSpace[0][0],searchSpace[1][0],searchSpace[0][1],searchSpace[1][1]);
+
     Element **result = NULL;
     int resultCount = 0;
 
@@ -1003,13 +1013,16 @@ int main()
         printf("No results found.\n");
     }
 
-    printf("\nInserting a sample point (3,14) in the tree.\n");
 
+    int sampleX = 3, sampleY = 14;
+    printf("\nInserting a sample point (%d,%d) in the tree.\n", sampleX, sampleY);
+
+    
     Element samplePoint;
-    samplePoint.MBR[0][0] = 3;
-    samplePoint.MBR[0][1] = 3;
-    samplePoint.MBR[1][0] = 14;
-    samplePoint.MBR[1][1] = 14;
+    samplePoint.MBR[0][0] = sampleX;
+    samplePoint.MBR[0][1] = sampleX;
+    samplePoint.MBR[1][0] = sampleY;
+    samplePoint.MBR[1][1] = sampleY;
     samplePoint.childPointer = NULL;
 
     insert(a, samplePoint);
