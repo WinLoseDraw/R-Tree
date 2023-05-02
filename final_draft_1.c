@@ -378,7 +378,7 @@ void search_rtree(node *T, int S[N][2], Element ***result, int *count)
 
 int dummyCoords[N][2] = {{0, 0}, {0, 0}}; // MBR for a dummy element, used as a helper
 
-bool isDummyElement(Element e)
+bool isDummyElement(Element e) // checks if an element is a dummy element
 {
     for (int i = 0; i < 2; i++)
     {
@@ -392,7 +392,7 @@ bool isDummyElement(Element e)
     return true;
 }
 
-void setAsDummyElement(Element *e)
+void setAsDummyElement(Element *e) // sets an element as a dummy
 {
     for (int i = 0; i < 2; i++)
     {
@@ -403,12 +403,12 @@ void setAsDummyElement(Element *e)
     }
 }
 
-int calculateTempArea(Element e1, Element e2) // used in splitnode
+int calculateTempArea(Element e1, Element e2) // used in pickseeds
 {
     return area(min(e1.MBR[0][0], e2.MBR[0][0]), max(e1.MBR[0][1], e2.MBR[0][1]), min(e1.MBR[1][0], e2.MBR[1][0]), max(e1.MBR[1][1], e2.MBR[1][1]));
 }
 
-void quadraticPickSeeds(Element elementArray[M + 1], Element *firstElement, Element *secondElement)
+void quadraticPickSeeds(Element elementArray[M + 1], Element *firstElement, Element *secondElement) // pick the first element of each new node in quadratic time
 {
 
     int maxWastedArea = -1;
@@ -439,10 +439,10 @@ void quadraticPickSeeds(Element elementArray[M + 1], Element *firstElement, Elem
     }
 
     setAsDummyElement(elementArray + maxI);
-    setAsDummyElement(elementArray + maxJ);
+    setAsDummyElement(elementArray + maxJ); // set the selected seeds as dummy elements
 }
 
-int calculateCost(Element e1, node group)
+int calculateCost(Element e1, node group) // used in picknext
 {
     int totalArea = area(min(e1.MBR[0][0], group.MBR[0][0]), max(e1.MBR[0][1], group.MBR[0][1]), min(e1.MBR[1][0], group.MBR[1][0]), max(e1.MBR[1][1], group.MBR[1][1]));
     int groupArea = areaOfNodeMBR(group);
@@ -450,7 +450,7 @@ int calculateCost(Element e1, node group)
     return cost;
 }
 
-Element pickNext(node group1, node group2, Element originalElements[M + 1])
+Element pickNext(node group1, node group2, Element originalElements[M + 1]) // select the next element to add to a node from the remaining elements
 { // may return dummy element
 
     int d1, d2, difference;
@@ -480,12 +480,12 @@ Element pickNext(node group1, node group2, Element originalElements[M + 1])
         }
     }
 
-    setAsDummyElement(originalElements + returnIndex);
+    setAsDummyElement(originalElements + returnIndex); // set the picked element as a dummy
 
     return returnElement;
 }
 
-void adjustParent(node *leaf, node *n1, node *n2)
+void adjustParent(node *leaf, node *n1, node *n2) // remove the original node from its parent and add the two new nodes instead
 {
     if (leaf->parent)
     {
@@ -528,7 +528,7 @@ void adjustParent(node *leaf, node *n1, node *n2)
     }
 }
 
-void linearPickSeeds(Element elementArray[M + 1], Element *firstElement, Element *secondElement)
+void linearPickSeeds(Element elementArray[M + 1], Element *firstElement, Element *secondElement) // select the first element of each new node in linear time
 {
     int highestLowX, highestLowY = INT_MIN;
     int lowestHighX, lowestHighY = INT_MAX;
@@ -593,6 +593,8 @@ void linearPickSeeds(Element elementArray[M + 1], Element *firstElement, Element
     int normalizedSeparationX = (highestLowX - lowestHighX) / widthX;
     int normalizedSeparationY = (highestLowY - lowestHighY) / widthY;
 
+    // After finding the normalized separation along both dimensions, we select the ones with greater separation
+
     if (normalizedSeparationX > normalizedSeparationY)
     {
         *firstElement = elementArray[lowestHighXIndex];
@@ -609,7 +611,7 @@ void linearPickSeeds(Element elementArray[M + 1], Element *firstElement, Element
     }
 }
 
-void updateChildPointer(node *currentNode, Element *e)
+void updateChildPointer(node *currentNode, Element *e) // set the parent of the element's child as the current node
 {
     if (e->childPointer)
     {
@@ -617,7 +619,7 @@ void updateChildPointer(node *currentNode, Element *e)
     }
 }
 
-void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear)
+void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear) // takes in an original node and splits it into two new nodes
 {
     node firstNewNode;
     node secondNewNode;
@@ -632,7 +634,7 @@ void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear
     Element firstElementOfFirstNewNode;
     Element firstElementOfSecondNewNode;
 
-    if (isLinear)
+    if (isLinear) // use linearPickSeeds if isLinear is true, else use quadraticPickSeeds
         linearPickSeeds(originalNode->entries, &firstElementOfFirstNewNode, &firstElementOfSecondNewNode);
     else
         quadraticPickSeeds(originalNode->entries, &firstElementOfFirstNewNode, &firstElementOfSecondNewNode);
@@ -696,7 +698,7 @@ void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear
             break;
         }
 
-        Element nextElement = pickNext(firstNewNode, secondNewNode, originalNode->entries);
+        Element nextElement = pickNext(firstNewNode, secondNewNode, originalNode->entries); // pick the next element and add it to a node
 
         if (isDummyElement(nextElement))
             break; // entries are finished
@@ -704,7 +706,7 @@ void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear
         int cost1 = calculateCost(nextElement, firstNewNode);
         int cost2 = calculateCost(nextElement, secondNewNode);
 
-        if (cost1 < cost2)
+        if (cost1 < cost2) // add to the one with lower cost
         {
             updateChildPointer(newNode1, &nextElement);
             insertElementIntoNode(&firstNewNode, nextElement);
@@ -719,7 +721,7 @@ void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear
             int area1 = areaOfNodeMBR(firstNewNode);
             int area2 = areaOfNodeMBR(secondNewNode);
 
-            if (area1 < area2)
+            if (area1 < area2) // if cost is equal, add to the one with smaller area
             {
                 updateChildPointer(newNode1, &nextElement);
                 insertElementIntoNode(&firstNewNode, nextElement);
@@ -731,7 +733,7 @@ void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear
             }
             else
             {
-                if (firstNewNode.count < secondNewNode.count)
+                if (firstNewNode.count < secondNewNode.count) // if areas are also equal, add to the one with smaller count
 
                 {
                     updateChildPointer(newNode1, &nextElement);
