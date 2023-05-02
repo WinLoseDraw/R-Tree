@@ -631,20 +631,16 @@ void print_leaf_node(node *n)
 
 
 
-double center(int arr[2])
-{
-    return ((double)arr[0] + arr[1]) / 2;
+double center(int arr[2]) {
+    return ((double)arr[0] + arr[1])/2;
 }
 
-void insertionSort(node **rectangles, int start, int end, int dimension)
-{
-    for (int i = start + 1; i < end; i++)
-    {
-        node *key = rectangles[i];
-        int j = i - 1;
-        while ((j >= start) && (center(key->MBR[dimension]) < center(rectangles[j]->MBR[dimension])))
-        {
-            rectangles[j + 1] = rectangles[j];
+void insertionSort(node** rectangles, int start, int end, int dimension) {
+    for (int i = start+1; i < end; i++) {
+        node* key = rectangles[i];
+        int j = i-1;
+        while ((j >= start) && (center(key->MBR[dimension]) < center(rectangles[j]->MBR[dimension]))) {
+            rectangles[j+1] = rectangles[j];
             j--;
         }
         j++;
@@ -652,73 +648,50 @@ void insertionSort(node **rectangles, int start, int end, int dimension)
     }
 }
 
-void insertionSort2(Element *data, int start, int end, int dimension)
-{
-    for (int i = start; i < end; i++)
-    {
-        Element key = data[i];
-        int j = i - 1;
-        while ((j >= start) && (center(key.MBR[dimension]) < center(data[j].MBR[dimension])))
-        {
-            data[j + 1] = data[j];
+void insertionSort2(Element* data, int start, int end, int dimension) {
+    for (int i = start; i < end; i++) {
+       Element key = data[i];
+       int j = i-1;
+       while ((j >= start) && (center(key.MBR[dimension]) < center(data[j].MBR[dimension]))) {
+            data[j+1] = data[j];
             j--;
         }
         j++;
-        data[j] = key;
+        data[j] = key; 
     }
 }
 
-
-node *construct(node **nodes, int n)
-{
-    if (n == 1)
-    {
+node* construct(node** nodes, int n) {              //constructs nodes using the lower level of nodes
+    if (n == 1) {
         return nodes[0];
     }
-    node *nodetemp[n];
-    for (int i = 0; i < n; i++)
-    {
-        nodetemp[i] = nodes[i];
-    }
-    insertionSort(nodes, 0, n, 0);
+    
+    insertionSort(nodes, 0, n, 0);              //sorts all the nodes by the x-values
 
-    for (int i = 0; i < n; i++)
-    {
-        nodetemp[i] = nodes[i];
-    }
+    int p = (n+M-1)/M;                          //ceil(n/M)
+    int s = (int)(ceil(sqrt(p)));                
+    int number = 0;                             //number of nodes in the next level
 
-    int p = (n + M - 1) / M;
-    int s = (int)(ceil(sqrt(p)));
-    int number = 0;
-
-    for (int i = 0; i < n; i += s * M)
-    {
-        insertionSort(nodes, i, min(i + s * M, n), 1);
-        for (int j = 0; j < n; j++)
-        {
-            nodetemp[j] = nodes[j];
-        }
-        number += min(s, (n - i + M - 1) / M);
+    for (int i = 0; i < n; i += s*M) {          //sorts ranges of s*M by the y-axis
+        insertionSort(nodes, i, min(i+s*M, n), 1);
+        number += min(s, (n-i+M-1)/M);          
     }
 
-    node **newNodes = (node **)malloc(sizeof(node *) * number);
+    node** newNodes = (node**) malloc(sizeof(node*)*number);            //the next level of nodes
 
     int nodeCount = 0;
     int loopNumber = 0;
-    for (int i = 0; i < n; i += s * M)
-    {
-        for (int j = 0; j < min(s, (n - i + M - 1) / M); j++)
-        {
-            int index = nodeCount + j;
+    for (int i = 0; i < n; i += s*M) {                                 //We evaluate one vertical strip at a time
+        for (int j = 0; j < min(s, (n-i+M-1)/M); j++) {                 //We will require s nodes per strip (S*M/M)
+            int index = nodeCount+j;
             newNodes[index] = createNewNode();
             newNodes[index]->isLeaf = false;
-            newNodes[index]->count = min(min(M, s * M - j * M), n - i - j * M);
+            newNodes[index]->count = min(M, n-i-j*M);
             newNodes[index]->MBR[0][0] = INF;
             newNodes[index]->MBR[0][1] = -INF;
             newNodes[index]->MBR[1][0] = INF;
             newNodes[index]->MBR[1][1] = -INF;
-            for (int k = 0; k < min(min(M, s * M - j * M), n - i - j * M); k++)
-            {
+            for (int k = 0; k < min(M, n-i-j*M); k++) {           //Each node gets M entries
                 Element temp;
                 temp.childPointer = nodes[loopNumber];
                 nodes[loopNumber]->parent = newNodes[index];
@@ -734,54 +707,39 @@ node *construct(node **nodes, int n)
                 loopNumber += 1;
             }
         }
-        nodeCount += min(s, (n - i + M - 1) / M);
+        nodeCount += min(s, (n-i+M-1)/M);
     }
 
-    for (int i = 0; i < number; i++)
-    {
-        nodetemp[i] = nodes[i];
-    }
-
-    node *newNodeTemp[number];
-    for (int i = 0; i < number; i++)
-    {
-        newNodeTemp[i] = newNodes[i];
-    }
-
-    return construct(newNodes, number);
+    return construct(newNodes, number);                         //recursively creating the upper nodes
+       
 }
 
-node **construct_leaf_pages(Element *data, int n, int *number)
-{
+node** construct_leaf_pages(Element* data, int n, int* number) {        //constructs the leaf nodes using the dataPoints
     insertionSort2(data, 0, n, 0);
-    int p = (n + M - 1) / M;
+    int p = (n+M-1)/M;
     int s = (int)(ceil(sqrt(p)));
     *number = 0;
 
-    for (int i = 0; i < n; i += s * M)
-    {
-        insertionSort2(data, i, min(i + s * M, n), 1);
-        *number += min(s, (n - i + M - 1) / M);
+    for (int i = 0; i < n; i += s*M) {
+        insertionSort2(data, i, min(i+s*M, n), 1);
+        *number += min(s, (n-i+M-1)/M);
     }
-
-    node **newNodes = (node **)malloc(sizeof(node *) * (*number));
+    
+    node** newNodes = (node**) malloc(sizeof(node*)*(*number));
 
     int nodeCount = 0;
     int loopNumber = 0;
-    for (int i = 0; i < n; i += s * M)
-    {
-        for (int j = 0; j < min(s, (n - i + M - 1) / M); j++)
-        {
-            int index = nodeCount + j;
+    for (int i = 0; i < n; i += s*M) {
+        for (int j = 0; j < min(s, (n-i+M-1)/M); j++) {
+            int index = nodeCount+j;
             newNodes[index] = createNewNode();
             newNodes[index]->isLeaf = true;
-            newNodes[index]->count = min(min(M, s * M - j * M), n - i - j * M);
+            newNodes[index]->count = min(M, n-i-j*M);
             newNodes[index]->MBR[0][0] = INF;
             newNodes[index]->MBR[0][1] = -INF;
             newNodes[index]->MBR[1][0] = INF;
             newNodes[index]->MBR[1][1] = -INF;
-            for (int k = 0; k < min(min(M, s * M - j * M), n - i - j * M); k++)
-            {
+            for (int k = 0; k < min(M, n-i-j*M); k++) {
                 newNodes[index]->entries[k] = data[loopNumber];
                 newNodes[index]->MBR[0][0] = min(newNodes[index]->MBR[0][0], data[loopNumber].MBR[0][0]);
                 newNodes[index]->MBR[0][1] = max(newNodes[index]->MBR[0][1], data[loopNumber].MBR[0][1]);
@@ -790,12 +748,17 @@ node **construct_leaf_pages(Element *data, int n, int *number)
                 loopNumber += 1;
             }
         }
-        nodeCount += min(s, (n - i + M - 1) / M);
+        nodeCount += min(s, (n-i+M-1)/M);
     }
 
-    return newNodes;
+    return newNodes; 
 }
 
+void STR(Element* data, int n, rtree* a) {
+    int* p = (int*) malloc(sizeof(int));
+    node** nodes = construct_leaf_pages(data, n, p);
+    a->root = construct(nodes, *p);
+}
 node *choose_leaf(rtree *tr, Element ele)
 {
     node *n = tr->root;
