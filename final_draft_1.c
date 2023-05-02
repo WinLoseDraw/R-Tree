@@ -332,9 +332,10 @@ bool contains(int S[N][2], int MBR[N][2]) // check if one rectangle is fully con
     }
     return true;
 }
-
+// Search R-tree for all entries that overlap with a given search rectangle
 void search_rtree(node *T, int S[N][2], Element ***result, int *count)
 {
+    // Base Case
     if (T == NULL)
     {
         return;
@@ -343,6 +344,7 @@ void search_rtree(node *T, int S[N][2], Element ***result, int *count)
     {
         for (int i = 0; i < T->count; i++)
         {
+            //If satisfies, add the entry to result
             if (overlaps(S, T->entries[i].MBR) || contains(S, T->entries[i].MBR))
             {
                 *result = (Element **)realloc(*result, (*count + 1) * sizeof(Element *));
@@ -355,10 +357,12 @@ void search_rtree(node *T, int S[N][2], Element ***result, int *count)
     {
         for (int i = 0; i < T->count; i++)
         {
+            //If satisfies, recursively search its child node
             if (overlaps(S, T->entries[i].MBR))
             {
                 search_rtree(T->entries[i].childPointer, S, result, count);
             }
+            // if satisfies, update S to be the intersection of S and the entry's MBR, and recursively search its child node
             else if (contains(S, T->entries[i].MBR))
             {
                 for (int j = 0; j < N; j++)
