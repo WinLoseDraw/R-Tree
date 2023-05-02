@@ -117,7 +117,7 @@ void searchTest() {
     node* root = createNewNode();
     a->root = root;
 
-    int n = 21;
+    int n = 1e3;
     FILE* fptr = fopen("data.txt", "r");
     Element dataPoints[n];
     
@@ -141,6 +141,8 @@ void searchTest() {
     }
 
     printf("\nInserted data points, tree created.\n\n");
+
+    preorder_traversal(a->root);
 
     int searchSpace[N][2] = {{3, 10}, {2, 8}};
     Element **result = NULL;

@@ -25,7 +25,7 @@ struct rtree_node {
     bool isLeaf;
     int count;
     int MBR[N][2];
-    Element entries[M];
+    Element entries[M+1];
     struct rtree_node* parent;
 };
 
@@ -524,7 +524,7 @@ void adjustParent(node *leaf, node *n1, node *n2)
 
         insertElementIntoNode(leaf->parent, temp2);
 
-        free(leaf);
+        // free(leaf);
     }
 }
 
@@ -949,11 +949,15 @@ void preorder_traversal(node* n)
 
 //----------------------------------------------------------main begins-----------------------------------------------------//
 
-int main() 
-{
-    int n = 21;
+void searchTest() {
+    rtree* a = createNewRtree();
+    node* root = createNewNode();
+    a->root = root;
+
+    int n = 20;
     FILE* fptr = fopen("data.txt", "r");
     Element dataPoints[n];
+    
     for (int i = 0; i < n; i++) {
         int a, b;
         fscanf(fptr, "%d", &a);
@@ -965,16 +969,47 @@ int main()
         dataPoints[i].childPointer = NULL;
     }
 
-    rtree* a = createNewRtree();
-
-    STR(dataPoints, n, a);
-
-    printf("%d\n", a->root->MBR[1][1]);
-    for (int i = 0; i < a->root->count; i++) {
-        printf("%d ", a->root->entries[i].MBR[1][1]);
+    for (int i = 0; i < n; i++) {
+        printf("%d: %d %d %d %d\n", i, dataPoints[i].MBR[0][0], dataPoints[i].MBR[0][1], dataPoints[i].MBR[1][0], dataPoints[i].MBR[1][1]);
     }
-    printf("\n");
-    preorder_traversal(a->root);
+
+    printf("File read complete.\n\n");
+
+    for (int i = 0; i < n; i++) {
+        printf("Inserting data point %d...\n", i);
+        insert(a, dataPoints[i]);
+    }
+
+    printf("\nInserted data points, tree created.\n\n");
+
+    int searchSpace[N][2] = {{3, 10}, {2, 8}};
+    Element **result = NULL;
+    int resultCount = 0;
+
+    printf("Searching: \n");
+
+    search_rtree(a->root, searchSpace, &result, &resultCount);
+
+    printf("Search Results:\n");
+    if (resultCount > 0)
+    {
+        printf("Results Found. \n");
+        for (int i = 0; i < resultCount; i++)
+        {
+            
+            printf("(%d, %d, %d, %d)\n", result[i]->MBR[0][0], result[i]->MBR[0][1], result[i]->MBR[1][0], result[i]->MBR[1][1]);
+        }
+    }
+    else
+    {
+        printf("No results found.\n");
+    }
+}
+
+
+int main() 
+{
+    searchTest();
 }
 
 //----------------------------------------------------------main ends-----------------------------------------------------//
