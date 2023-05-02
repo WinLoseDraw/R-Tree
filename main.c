@@ -287,6 +287,8 @@ void adjustParent(node *leaf, node *n1, node *n2)
         temp2.MBR[1][1] = n2->MBR[1][1];
 
         insertElementIntoNode(leaf->parent, temp2);
+
+        free(leaf);
     }
 }
 

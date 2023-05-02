@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <limits.h>
+#include <math.h>
 
 //Structs start
 
@@ -342,6 +343,8 @@ void adjustParent(node *leaf, node *n1, node *n2)
         temp2.MBR[1][1] = n2->MBR[1][1];
 
         insertElementIntoNode(leaf->parent, temp2);
+
+        free(leaf);
     }
 }
 
@@ -433,6 +436,147 @@ void updateChildPointer(node *currentNode, Element *e)
         e->childPointer->parent = currentNode;
     }
 }
+
+//SplitNode starts
+
+
+
+void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear){
+    node firstNewNode;
+    node secondNewNode;
+
+    initializeNode(&firstNewNode);
+    initializeNode(&secondNewNode);
+
+    firstNewNode.isLeaf = originalNode->isLeaf;
+    secondNewNode.isLeaf = originalNode->isLeaf;
+
+
+    Element firstElementOfFirstNewNode;
+    Element firstElementOfSecondNewNode;
+
+    if (isLinear)
+        linearPickSeeds(originalNode->entries, &firstElementOfFirstNewNode, &firstElementOfSecondNewNode);
+    else
+        quadraticPickSeeds(originalNode->entries, &firstElementOfFirstNewNode, &firstElementOfSecondNewNode);
+
+    updateChildPointer(newNode1, &firstElementOfFirstNewNode);
+    updateChildPointer(newNode2, &firstElementOfSecondNewNode);
+
+    insertElementIntoNode(&firstNewNode, firstElementOfFirstNewNode);
+    insertElementIntoNode(&secondNewNode, firstElementOfSecondNewNode);
+
+    int remainingCount = M - 1; // after removing 2 elements from elements array using PickSeeds
+
+    while (remainingCount > 0)
+    {
+
+        if (firstNewNode.count + remainingCount == m) // if there are too few entries in firstNewNode
+        {
+
+            int index = 0;
+
+            while (remainingCount > 0)
+            {
+
+                if (isDummyElement(originalNode->entries[index]))
+                {
+                    index++;
+                    continue;
+                }
+                else
+                {
+                    updateChildPointer(newNode1, originalNode->entries + index);
+                    insertElementIntoNode(&firstNewNode, originalNode->entries[index]);
+                    remainingCount--;
+                }
+            }
+
+            break;
+        }
+
+        else if (secondNewNode.count + remainingCount == m) // if there are too few entries in secondNewNode
+        {
+
+            int index = 0;
+
+            while (remainingCount > 0)
+            {
+
+                if (isDummyElement(originalNode->entries[index]))
+                {
+                    index++;
+                    continue;
+                }
+                else
+                {
+                    updateChildPointer(newNode2, originalNode->entries + index);
+                    insertElementIntoNode(&secondNewNode, originalNode->entries[index]);
+                    remainingCount--;
+                }
+            }
+
+            break;
+        }
+
+        Element nextElement = pickNext(firstNewNode, secondNewNode, originalNode->entries);
+
+        if (isDummyElement(nextElement))
+            break; // entries are finished
+
+        int cost1 = calculateCost(nextElement, firstNewNode);
+        int cost2 = calculateCost(nextElement, secondNewNode);
+
+        if (cost1 < cost2)
+        {
+            updateChildPointer(newNode1, &nextElement);
+            insertElementIntoNode(&firstNewNode, nextElement);
+        }
+        else if (cost2 < cost1)
+        {
+            updateChildPointer(newNode2, &nextElement);
+            insertElementIntoNode(&secondNewNode, nextElement);
+        }
+        else
+        {
+            int area1 = areaOfNodeMBR(firstNewNode);
+            int area2 = areaOfNodeMBR(secondNewNode);
+
+            if (area1 < area2)
+            {
+                updateChildPointer(newNode1, &nextElement);
+                insertElementIntoNode(&firstNewNode, nextElement);
+            }
+            else if (area1 > area2)
+            {
+                updateChildPointer(newNode2, &nextElement);
+                insertElementIntoNode(&secondNewNode, nextElement);
+            }
+            else
+            {
+                if (firstNewNode.count < secondNewNode.count)
+
+                {
+                    updateChildPointer(newNode1, &nextElement);
+                    insertElementIntoNode(&firstNewNode, nextElement);
+                }
+                else
+                {
+                    updateChildPointer(newNode2, &nextElement);
+                    insertElementIntoNode(&secondNewNode, nextElement);
+                }
+            }
+        }
+
+        remainingCount--;
+    }
+    *newNode1 = firstNewNode;
+    *newNode2 = secondNewNode;
+
+    adjustParent(originalNode, newNode1, newNode2);
+}
+
+// End SplitNode
 
 void mergeMBR(node *n1, Element ele)
 {
@@ -806,148 +950,6 @@ void search_rtree(node *T, int S[N][2], Element ***result, int *count)
             }
         }
     }
-}
-
-
-
-
-//SplitNode starts
-
-
-
-void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear){
-    node firstNewNode;
-    node secondNewNode;
-
-    initializeNode(&firstNewNode);
-    initializeNode(&secondNewNode);
-
-    firstNewNode.isLeaf = originalNode->isLeaf;
-    secondNewNode.isLeaf = originalNode->isLeaf;
-
-
-    Element firstElementOfFirstNewNode;
-    Element firstElementOfSecondNewNode;
-
-    if (isLinear)
-        linearPickSeeds(originalNode->entries, &firstElementOfFirstNewNode, &firstElementOfSecondNewNode);
-    else
-        quadraticPickSeeds(originalNode->entries, &firstElementOfFirstNewNode, &firstElementOfSecondNewNode);
-
-    updateChildPointer(newNode1, &firstElementOfFirstNewNode);
-    updateChildPointer(newNode2, &firstElementOfSecondNewNode);
-
-    insertElementIntoNode(&firstNewNode, firstElementOfFirstNewNode);
-    insertElementIntoNode(&secondNewNode, firstElementOfSecondNewNode);
-
-    int remainingCount = M - 1; // after removing 2 elements from elements array using PickSeeds
-
-    while (remainingCount > 0)
-    {
-
-        if (firstNewNode.count + remainingCount == m) // if there are too few entries in firstNewNode
-        {
-
-            int index = 0;
-
-            while (remainingCount > 0)
-            {
-
-                if (isDummyElement(originalNode->entries[index]))
-                {
-                    index++;
-                    continue;
-                }
-                else
-                {
-                    updateChildPointer(newNode1, originalNode->entries + index);
-                    insertElementIntoNode(&firstNewNode, originalNode->entries[index]);
-                    remainingCount--;
-                }
-            }
-
-            break;
-        }
-
-        else if (secondNewNode.count + remainingCount == m) // if there are too few entries in secondNewNode
-        {
-
-            int index = 0;
-
-            while (remainingCount > 0)
-            {
-
-                if (isDummyElement(originalNode->entries[index]))
-                {
-                    index++;
-                    continue;
-                }
-                else
-                {
-                    updateChildPointer(newNode2, originalNode->entries + index);
-                    insertElementIntoNode(&secondNewNode, originalNode->entries[index]);
-                    remainingCount--;
-                }
-            }
-
-            break;
-        }
-
-        Element nextElement = pickNext(firstNewNode, secondNewNode, originalNode->entries);
-
-        if (isDummyElement(nextElement))
-            break; // entries are finished
-
-        int cost1 = calculateCost(nextElement, firstNewNode);
-        int cost2 = calculateCost(nextElement, secondNewNode);
-
-        if (cost1 < cost2)
-        {
-            updateChildPointer(newNode1, &nextElement);
-            insertElementIntoNode(&firstNewNode, nextElement);
-        }
-        else if (cost2 < cost1)
-        {
-            updateChildPointer(newNode2, &nextElement);
-            insertElementIntoNode(&secondNewNode, nextElement);
-        }
-        else
-        {
-            int area1 = areaOfNodeMBR(firstNewNode);
-            int area2 = areaOfNodeMBR(secondNewNode);
-
-            if (area1 < area2)
-            {
-                updateChildPointer(newNode1, &nextElement);
-                insertElementIntoNode(&firstNewNode, nextElement);
-            }
-            else if (area1 > area2)
-            {
-                updateChildPointer(newNode2, &nextElement);
-                insertElementIntoNode(&secondNewNode, nextElement);
-            }
-            else
-            {
-                if (firstNewNode.count < secondNewNode.count)
-
-                {
-                    updateChildPointer(newNode1, &nextElement);
-                    insertElementIntoNode(&firstNewNode, nextElement);
-                }
-                else
-                {
-                    updateChildPointer(newNode2, &nextElement);
-                    insertElementIntoNode(&secondNewNode, nextElement);
-                }
-            }
-        }
-
-        remainingCount--;
-    }
-    *newNode1 = firstNewNode;
-    *newNode2 = secondNewNode;
-
-    adjustParent(originalNode, newNode1, newNode2);
 }
 
 
