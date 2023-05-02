@@ -625,15 +625,8 @@ void updateChildPointer(node *currentNode, Element *e) // set the parent of the 
 
 void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear) // takes in an original node and splits it into two new nodes
 {
-    // node* firstNewNode;
-    // node* secondNewNode;
-
-    // initializeNode(firstNewNode);
-    // initializeNode(secondNewNode);
-
     newNode1->isLeaf = originalNode->isLeaf;
     newNode2->isLeaf = originalNode->isLeaf;
-
 
     Element firstElementOfFirstNewNode;
     Element firstElementOfSecondNewNode;
@@ -753,9 +746,6 @@ void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear
 
         remainingCount--;
     }
-
-    // *newNode1 = firstNewNode;
-    // *newNode2 = secondNewNode;
 
     adjustParent(originalNode, newNode1, newNode2);
 }
@@ -962,9 +952,9 @@ int main()
     node* root = createNewNode();
     a->root = root;
 
-    int numDataPoints = 8e4; //number of 2D data points in data.txt
+    int numDataPoints = 1e5; //number of 2D data points in data.txt
     FILE* fptr = fopen("data.txt", "r");
-    Element dataPoints[numDataPoints];
+    Element* dataPoints = (Element *) malloc(numDataPoints * sizeof(Element));
     
     for (int i = 0; i < numDataPoints; i++) {
         int a, b;
