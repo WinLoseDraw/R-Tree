@@ -175,6 +175,7 @@ node *createNewNode()
 
     return ans;
 }
+
 //----------------------------------------------------------Helper Functions end-----------------------------------------------------//
 
 //----------------------------------------------------------STR begins-----------------------------------------------------//
@@ -909,24 +910,6 @@ void adjust_tree(rtree *tree, node *n, node *child)
     }
 }
 
-void bfs(node* a) {
-    node* arr[50];
-    int index = 0;
-    int last = 1;
-    arr[0] = a;
-    while (arr[index]) {
-        printf("%d %d %d %d\n", arr[index]->MBR[0][0], arr[index]->MBR[0][1], arr[index]->MBR[1][0], arr[index]->MBR[1][1]);
-        for (int i = 0; i < arr[index]->count; i++) {
-            arr[last] = arr[index]->entries[i].childPointer;
-            last += 1;
-        }
-        index += 1;
-    }
-}
-
-
-
-
 void insert(rtree *tr, Element ele)
 {
     node *leaf = choose_leaf(tr, ele);
@@ -941,8 +924,9 @@ void insert(rtree *tr, Element ele)
     return;
 }
 
+//----------------------------------------------------------Insert ends-----------------------------------------------------//
 
-
+//----------------------------------------------------------Preorder Traversal begins-----------------------------------------------------//
 
 void print_internal_node(node *n)
 {
@@ -962,23 +946,29 @@ void print_leaf_node(node *n)
     printf("}\n\n");
 }
 
-
-void preOrder(node *a)
+void preorder_traversal(node* n) 
 {
-    if (!a)
-    {
+    if (n == NULL) 
         return;
-    }
-
-    printf("%d %d %d %d\n", a->MBR[0][0], a->MBR[0][1], a->MBR[1][0], a->MBR[1][1]);
-    for (int i = 0; i < a->count; i++)
+    
+    if (n->isLeaf) 
     {
-        preOrder(a->entries[i].childPointer);
+        print_leaf_node(n);
+    } 
+    else 
+    {
+        print_internal_node(n);
+        for (int i = 0; i < n->count; i++)
+            preorder_traversal(n->entries[i].childPointer);  
     }
 }
 
+//----------------------------------------------------------Preorder Traversal ends-----------------------------------------------------//
 
-int main() {
+//----------------------------------------------------------main begins-----------------------------------------------------//
+
+int main() 
+{
     int n = 21;
     FILE* fptr = fopen("data.txt", "r");
     Element dataPoints[n];
@@ -1002,5 +992,7 @@ int main() {
         printf("%d ", a->root->entries[i].MBR[1][1]);
     }
     printf("\n");
-    bfs(a->root);
+    preorder_traversal(a->root);
 }
+
+//----------------------------------------------------------main ends-----------------------------------------------------//
