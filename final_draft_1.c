@@ -10,7 +10,7 @@
 #include <limits.h>
 #include <math.h>
 
-//Structs start
+//----------------------------------------------------------Structs begin-----------------------------------------------------//
 
 typedef enum { false, true } bool;
 
@@ -37,7 +37,9 @@ struct rtree {
 
 typedef struct rtree rtree;
 
-//Helper functions start
+//----------------------------------------------------------Structs end-----------------------------------------------------//
+
+//----------------------------------------------------------Helper Functions begin-----------------------------------------------------//
 
 int min(int n1, int n2)
 {
@@ -84,6 +86,11 @@ int areaOfElementMBR(Element e)
 int areaOfNodeMBR(node n)
 {
     return area(n.MBR[0][0], n.MBR[0][1], n.MBR[1][0], n.MBR[1][1]);
+}
+
+double center(int arr[2]) 
+{
+    return ((double)arr[0] + arr[1])/2;
 }
 
 void displayNode(node currentNode)
@@ -168,9 +175,159 @@ node *createNewNode()
 
     return ans;
 }
+//----------------------------------------------------------Helper Functions end-----------------------------------------------------//
 
-// check if two rectangles overlap
-bool overlaps(int S[N][2], int MBR[N][2])
+//----------------------------------------------------------STR begins-----------------------------------------------------//
+
+void insertionSort(node** rectangles, int start, int end, int dimension) {
+    for (int i = start+1; i < end; i++) {
+        node* key = rectangles[i];
+        int j = i-1;
+        while ((j >= start) && (center(key->MBR[dimension]) < center(rectangles[j]->MBR[dimension]))) {
+            rectangles[j+1] = rectangles[j];
+            j--;
+        }
+        j++;
+        rectangles[j] = key;
+    }
+}
+
+void insertionSort2(Element* data, int start, int end, int dimension) {
+    for (int i = start; i < end; i++) {
+       Element key = data[i];
+       int j = i-1;
+       while ((j >= start) && (center(key.MBR[dimension]) < center(data[j].MBR[dimension]))) {
+            data[j+1] = data[j];
+            j--;
+        }
+        j++;
+        data[j] = key; 
+    }
+}
+
+node* construct(node** nodes, int n) {              //constructs nodes using the lower level of nodes
+    if (n == 1) {
+        return nodes[0];
+    }
+    
+    insertionSort(nodes, 0, n, 0);              //sorts all the nodes by the x-values
+
+    int p = (n+M-1)/M;                          //ceil(n/M)
+    int s = (int)(ceil(sqrt(p)));                
+    int number = 0;                             //number of nodes in the next level
+
+    for (int i = 0; i < n; i += s*M) {          //sorts ranges of s*M by the y-axis
+        insertionSort(nodes, i, min(i+s*M, n), 1);
+        number += min(s, (n-i+M-1)/M);          
+    }
+
+    node** newNodes = (node**) malloc(sizeof(node*)*number);            //the next level of nodes
+
+    int nodeCount = 0;
+    int loopNumber = 0;
+    for (int i = 0; i < n; i += s*M) {                                 //We evaluate one vertical strip at a time
+        for (int j = 0; j < min(s, (n-i+M-1)/M); j++) {                 //We will require s nodes per strip (S*M/M)
+            int index = nodeCount+j;
+            newNodes[index] = createNewNode();
+            newNodes[index]->isLeaf = false;
+            newNodes[index]->count = min(M, n-i-j*M);
+            newNodes[index]->MBR[0][0] = INF;
+            newNodes[index]->MBR[0][1] = -INF;
+            newNodes[index]->MBR[1][0] = INF;
+            newNodes[index]->MBR[1][1] = -INF;
+            for (int k = 0; k < min(M, n-i-j*M); k++) {           //Each node gets M entries
+                Element temp;
+                temp.childPointer = nodes[loopNumber];
+                nodes[loopNumber]->parent = newNodes[index];
+                temp.MBR[0][0] = nodes[loopNumber]->MBR[0][0];
+                temp.MBR[0][1] = nodes[loopNumber]->MBR[0][1];
+                temp.MBR[1][0] = nodes[loopNumber]->MBR[1][0];
+                temp.MBR[1][1] = nodes[loopNumber]->MBR[1][1];
+                newNodes[index]->entries[k] = temp;
+                newNodes[index]->MBR[0][0] = min(newNodes[index]->MBR[0][0], nodes[loopNumber]->MBR[0][0]);
+                newNodes[index]->MBR[0][1] = max(newNodes[index]->MBR[0][1], nodes[loopNumber]->MBR[0][1]);
+                newNodes[index]->MBR[1][0] = min(newNodes[index]->MBR[1][0], nodes[loopNumber]->MBR[1][0]);
+                newNodes[index]->MBR[1][1] = max(newNodes[index]->MBR[1][1], nodes[loopNumber]->MBR[1][1]);
+                loopNumber += 1;
+            }
+        }
+        nodeCount += min(s, (n-i+M-1)/M);
+    }
+
+    return construct(newNodes, number);                         //recursively creating the upper nodes
+       
+}
+
+node** construct_leaf_pages(Element* data, int n, int* number) {        //constructs the leaf nodes using the dataPoints
+    insertionSort2(data, 0, n, 0);
+    int p = (n+M-1)/M;
+    int s = (int)(ceil(sqrt(p)));
+    *number = 0;
+
+    for (int i = 0; i < n; i += s*M) {
+        insertionSort2(data, i, min(i+s*M, n), 1);
+        *number += min(s, (n-i+M-1)/M);
+    }
+    
+    node** newNodes = (node**) malloc(sizeof(node*)*(*number));
+
+    int nodeCount = 0;
+    int loopNumber = 0;
+    for (int i = 0; i < n; i += s*M) {
+        for (int j = 0; j < min(s, (n-i+M-1)/M); j++) {
+            int index = nodeCount+j;
+            newNodes[index] = createNewNode();
+            newNodes[index]->isLeaf = true;
+            newNodes[index]->count = min(M, n-i-j*M);
+            newNodes[index]->MBR[0][0] = INF;
+            newNodes[index]->MBR[0][1] = -INF;
+            newNodes[index]->MBR[1][0] = INF;
+            newNodes[index]->MBR[1][1] = -INF;
+            for (int k = 0; k < min(M, n-i-j*M); k++) {
+                newNodes[index]->entries[k] = data[loopNumber];
+                newNodes[index]->MBR[0][0] = min(newNodes[index]->MBR[0][0], data[loopNumber].MBR[0][0]);
+                newNodes[index]->MBR[0][1] = max(newNodes[index]->MBR[0][1], data[loopNumber].MBR[0][1]);
+                newNodes[index]->MBR[1][0] = min(newNodes[index]->MBR[1][0], data[loopNumber].MBR[1][0]);
+                newNodes[index]->MBR[1][1] = max(newNodes[index]->MBR[1][1], data[loopNumber].MBR[1][1]);
+                loopNumber += 1;
+            }
+        }
+        nodeCount += min(s, (n-i+M-1)/M);
+    }
+
+    return newNodes; 
+}
+
+void STR(Element* data, int n, rtree* a) {
+    int* p = (int*) malloc(sizeof(int));
+    node** nodes = construct_leaf_pages(data, n, p);
+    a->root = construct(nodes, *p);
+}
+
+void STR(Element *data, int n, rtree *a)
+{
+    int *p = (int *)malloc(sizeof(int));
+    node **nodes = construct_leaf_pages(data, n, p);
+
+    printf("Leaf nodes\n");
+    node *nodetemp[(*p)];
+    for (int i = 0; i < *p; i++)
+    {
+        nodetemp[i] = nodes[i];
+        for (int j = 0; j < nodes[i]->count; j++)
+        {
+            printf("%d %d %d %d\n", nodes[i]->entries[j].MBR[0][0], nodes[i]->entries[j].MBR[0][1], nodes[i]->entries[j].MBR[1][0], nodes[i]->entries[j].MBR[1][1]);
+        }
+        printf("\n");
+    }
+    a->root = construct(nodes, *p);
+}
+
+//----------------------------------------------------------STR ends-----------------------------------------------------//
+
+//----------------------------------------------------------Searching begins-----------------------------------------------------//
+
+bool overlaps(int S[N][2], int MBR[N][2]) // check if two rectangles overlap
 {
     for (int i = 0; i < N; i++)
     {
@@ -182,8 +339,7 @@ bool overlaps(int S[N][2], int MBR[N][2])
     return true;
 }
 
-// check if one rectangle is fully contained within another
-bool contains(int S[N][2], int MBR[N][2])
+bool contains(int S[N][2], int MBR[N][2]) // check if one rectangle is fully contained within another
 {
     for (int i = 0; i < N; i++)
     {
@@ -195,6 +351,48 @@ bool contains(int S[N][2], int MBR[N][2])
     return true;
 }
 
+void search_rtree(node *T, int S[N][2], Element ***result, int *count)
+{
+    if (T == NULL)
+    {
+        return;
+    }
+    if (T->isLeaf)
+    {
+        for (int i = 0; i < T->count; i++)
+        {
+            if (overlaps(S, T->entries[i].MBR) || contains(S, T->entries[i].MBR))
+            {
+                *result = (Element **)realloc(*result, (*count + 1) * sizeof(Element *));
+                (*result)[*count] = &(T->entries[i]);
+                (*count)++;
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0; i < T->count; i++)
+        {
+            if (overlaps(S, T->entries[i].MBR))
+            {
+                search_rtree(T->entries[i].childPointer, S, result, count);
+            }
+            else if (contains(S, T->entries[i].MBR))
+            {
+                for (int j = 0; j < N; j++)
+                {
+                    S[j][0] = max(S[j][0], T->entries[i].MBR[j][0]);
+                    S[j][1] = min(S[j][1], T->entries[i].MBR[j][1]);
+                }
+                search_rtree(T->entries[i].childPointer, S, result, count);
+            }
+        }
+    }
+}
+
+//----------------------------------------------------------Searching ends-----------------------------------------------------//
+
+//----------------------------------------------------------SplitNode begins-----------------------------------------------------//
 
 int dummyCoords[N][2] = {{0, 0}, {0, 0}}; // MBR for a dummy element, used as a helper
 
@@ -437,11 +635,8 @@ void updateChildPointer(node *currentNode, Element *e)
     }
 }
 
-//SplitNode starts
-
-
-
-void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear){
+void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear)
+{
     node firstNewNode;
     node secondNewNode;
 
@@ -576,7 +771,9 @@ void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear
     adjustParent(originalNode, newNode1, newNode2);
 }
 
-// End SplitNode
+//----------------------------------------------------------SplitNode ends-----------------------------------------------------//
+
+//----------------------------------------------------------Insert begins-----------------------------------------------------//
 
 void mergeMBR(node *n1, Element ele)
 {
@@ -611,154 +808,7 @@ int calcEnlargement(int r1[N][2], int r2[N][2])
     return enlargement;
 }
 
-void print_internal_node(node *n)
-{
-    printf("Internal Node: MBR spans from ");
-    printf("(%d, %d) to (%d, %d)", n->MBR[0][0], n->MBR[1][0], n->MBR[0][1], n->MBR[1][1]);
-    printf("\n\n");
-}
 
-void print_leaf_node(node *n)
-{
-    printf("Leaf Node: contains %d %s {", n->count, (n->count > 1) ? "entries" : "entry");
-    int i;
-    for (i = 0; i < n->count - 1; i++)
-        printf("(%d, %d) | ", n->entries[i].MBR[0][0], n->entries[i].MBR[1][0]);
-    printf("(%d, %d)", n->entries[i].MBR[0][0], n->entries[i].MBR[1][0]);
-
-    printf("}\n\n");
-}
-
-
-
-double center(int arr[2]) {
-    return ((double)arr[0] + arr[1])/2;
-}
-
-void insertionSort(node** rectangles, int start, int end, int dimension) {
-    for (int i = start+1; i < end; i++) {
-        node* key = rectangles[i];
-        int j = i-1;
-        while ((j >= start) && (center(key->MBR[dimension]) < center(rectangles[j]->MBR[dimension]))) {
-            rectangles[j+1] = rectangles[j];
-            j--;
-        }
-        j++;
-        rectangles[j] = key;
-    }
-}
-
-void insertionSort2(Element* data, int start, int end, int dimension) {
-    for (int i = start; i < end; i++) {
-       Element key = data[i];
-       int j = i-1;
-       while ((j >= start) && (center(key.MBR[dimension]) < center(data[j].MBR[dimension]))) {
-            data[j+1] = data[j];
-            j--;
-        }
-        j++;
-        data[j] = key; 
-    }
-}
-
-node* construct(node** nodes, int n) {              //constructs nodes using the lower level of nodes
-    if (n == 1) {
-        return nodes[0];
-    }
-    
-    insertionSort(nodes, 0, n, 0);              //sorts all the nodes by the x-values
-
-    int p = (n+M-1)/M;                          //ceil(n/M)
-    int s = (int)(ceil(sqrt(p)));                
-    int number = 0;                             //number of nodes in the next level
-
-    for (int i = 0; i < n; i += s*M) {          //sorts ranges of s*M by the y-axis
-        insertionSort(nodes, i, min(i+s*M, n), 1);
-        number += min(s, (n-i+M-1)/M);          
-    }
-
-    node** newNodes = (node**) malloc(sizeof(node*)*number);            //the next level of nodes
-
-    int nodeCount = 0;
-    int loopNumber = 0;
-    for (int i = 0; i < n; i += s*M) {                                 //We evaluate one vertical strip at a time
-        for (int j = 0; j < min(s, (n-i+M-1)/M); j++) {                 //We will require s nodes per strip (S*M/M)
-            int index = nodeCount+j;
-            newNodes[index] = createNewNode();
-            newNodes[index]->isLeaf = false;
-            newNodes[index]->count = min(M, n-i-j*M);
-            newNodes[index]->MBR[0][0] = INF;
-            newNodes[index]->MBR[0][1] = -INF;
-            newNodes[index]->MBR[1][0] = INF;
-            newNodes[index]->MBR[1][1] = -INF;
-            for (int k = 0; k < min(M, n-i-j*M); k++) {           //Each node gets M entries
-                Element temp;
-                temp.childPointer = nodes[loopNumber];
-                nodes[loopNumber]->parent = newNodes[index];
-                temp.MBR[0][0] = nodes[loopNumber]->MBR[0][0];
-                temp.MBR[0][1] = nodes[loopNumber]->MBR[0][1];
-                temp.MBR[1][0] = nodes[loopNumber]->MBR[1][0];
-                temp.MBR[1][1] = nodes[loopNumber]->MBR[1][1];
-                newNodes[index]->entries[k] = temp;
-                newNodes[index]->MBR[0][0] = min(newNodes[index]->MBR[0][0], nodes[loopNumber]->MBR[0][0]);
-                newNodes[index]->MBR[0][1] = max(newNodes[index]->MBR[0][1], nodes[loopNumber]->MBR[0][1]);
-                newNodes[index]->MBR[1][0] = min(newNodes[index]->MBR[1][0], nodes[loopNumber]->MBR[1][0]);
-                newNodes[index]->MBR[1][1] = max(newNodes[index]->MBR[1][1], nodes[loopNumber]->MBR[1][1]);
-                loopNumber += 1;
-            }
-        }
-        nodeCount += min(s, (n-i+M-1)/M);
-    }
-
-    return construct(newNodes, number);                         //recursively creating the upper nodes
-       
-}
-
-node** construct_leaf_pages(Element* data, int n, int* number) {        //constructs the leaf nodes using the dataPoints
-    insertionSort2(data, 0, n, 0);
-    int p = (n+M-1)/M;
-    int s = (int)(ceil(sqrt(p)));
-    *number = 0;
-
-    for (int i = 0; i < n; i += s*M) {
-        insertionSort2(data, i, min(i+s*M, n), 1);
-        *number += min(s, (n-i+M-1)/M);
-    }
-    
-    node** newNodes = (node**) malloc(sizeof(node*)*(*number));
-
-    int nodeCount = 0;
-    int loopNumber = 0;
-    for (int i = 0; i < n; i += s*M) {
-        for (int j = 0; j < min(s, (n-i+M-1)/M); j++) {
-            int index = nodeCount+j;
-            newNodes[index] = createNewNode();
-            newNodes[index]->isLeaf = true;
-            newNodes[index]->count = min(M, n-i-j*M);
-            newNodes[index]->MBR[0][0] = INF;
-            newNodes[index]->MBR[0][1] = -INF;
-            newNodes[index]->MBR[1][0] = INF;
-            newNodes[index]->MBR[1][1] = -INF;
-            for (int k = 0; k < min(M, n-i-j*M); k++) {
-                newNodes[index]->entries[k] = data[loopNumber];
-                newNodes[index]->MBR[0][0] = min(newNodes[index]->MBR[0][0], data[loopNumber].MBR[0][0]);
-                newNodes[index]->MBR[0][1] = max(newNodes[index]->MBR[0][1], data[loopNumber].MBR[0][1]);
-                newNodes[index]->MBR[1][0] = min(newNodes[index]->MBR[1][0], data[loopNumber].MBR[1][0]);
-                newNodes[index]->MBR[1][1] = max(newNodes[index]->MBR[1][1], data[loopNumber].MBR[1][1]);
-                loopNumber += 1;
-            }
-        }
-        nodeCount += min(s, (n-i+M-1)/M);
-    }
-
-    return newNodes; 
-}
-
-void STR(Element* data, int n, rtree* a) {
-    int* p = (int*) malloc(sizeof(int));
-    node** nodes = construct_leaf_pages(data, n, p);
-    a->root = construct(nodes, *p);
-}
 node *choose_leaf(rtree *tr, Element ele)
 {
     node *n = tr->root;
@@ -874,46 +924,6 @@ void bfs(node* a) {
     }
 }
 
-//search starts
-
-void search_rtree(node *T, int S[N][2], Element ***result, int *count)
-{
-    if (T == NULL)
-    {
-        return;
-    }
-    if (T->isLeaf)
-    {
-        for (int i = 0; i < T->count; i++)
-        {
-            if (overlaps(S, T->entries[i].MBR) || contains(S, T->entries[i].MBR))
-            {
-                *result = (Element **)realloc(*result, (*count + 1) * sizeof(Element *));
-                (*result)[*count] = &(T->entries[i]);
-                (*count)++;
-            }
-        }
-    }
-    else
-    {
-        for (int i = 0; i < T->count; i++)
-        {
-            if (overlaps(S, T->entries[i].MBR))
-            {
-                search_rtree(T->entries[i].childPointer, S, result, count);
-            }
-            else if (contains(S, T->entries[i].MBR))
-            {
-                for (int j = 0; j < N; j++)
-                {
-                    S[j][0] = max(S[j][0], T->entries[i].MBR[j][0]);
-                    S[j][1] = min(S[j][1], T->entries[i].MBR[j][1]);
-                }
-                search_rtree(T->entries[i].childPointer, S, result, count);
-            }
-        }
-    }
-}
 
 
 
@@ -934,23 +944,22 @@ void insert(rtree *tr, Element ele)
 
 
 
-void STR(Element *data, int n, rtree *a)
+void print_internal_node(node *n)
 {
-    int *p = (int *)malloc(sizeof(int));
-    node **nodes = construct_leaf_pages(data, n, p);
+    printf("Internal Node: MBR spans from ");
+    printf("(%d, %d) to (%d, %d)", n->MBR[0][0], n->MBR[1][0], n->MBR[0][1], n->MBR[1][1]);
+    printf("\n\n");
+}
 
-    printf("Leaf nodes\n");
-    node *nodetemp[(*p)];
-    for (int i = 0; i < *p; i++)
-    {
-        nodetemp[i] = nodes[i];
-        for (int j = 0; j < nodes[i]->count; j++)
-        {
-            printf("%d %d %d %d\n", nodes[i]->entries[j].MBR[0][0], nodes[i]->entries[j].MBR[0][1], nodes[i]->entries[j].MBR[1][0], nodes[i]->entries[j].MBR[1][1]);
-        }
-        printf("\n");
-    }
-    a->root = construct(nodes, *p);
+void print_leaf_node(node *n)
+{
+    printf("Leaf Node: contains %d %s {", n->count, (n->count > 1) ? "entries" : "entry");
+    int i;
+    for (i = 0; i < n->count - 1; i++)
+        printf("(%d, %d) | ", n->entries[i].MBR[0][0], n->entries[i].MBR[1][0]);
+    printf("(%d, %d)", n->entries[i].MBR[0][0], n->entries[i].MBR[1][0]);
+
+    printf("}\n\n");
 }
 
 
