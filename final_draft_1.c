@@ -625,14 +625,14 @@ void updateChildPointer(node *currentNode, Element *e) // set the parent of the 
 
 void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear) // takes in an original node and splits it into two new nodes
 {
-    node firstNewNode;
-    node secondNewNode;
+    // node* firstNewNode;
+    // node* secondNewNode;
 
-    initializeNode(&firstNewNode);
-    initializeNode(&secondNewNode);
+    // initializeNode(firstNewNode);
+    // initializeNode(secondNewNode);
 
-    firstNewNode.isLeaf = originalNode->isLeaf;
-    secondNewNode.isLeaf = originalNode->isLeaf;
+    newNode1->isLeaf = originalNode->isLeaf;
+    newNode2->isLeaf = originalNode->isLeaf;
 
 
     Element firstElementOfFirstNewNode;
@@ -646,15 +646,15 @@ void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear
     updateChildPointer(newNode1, &firstElementOfFirstNewNode);
     updateChildPointer(newNode2, &firstElementOfSecondNewNode);
 
-    insertElementIntoNode(&firstNewNode, firstElementOfFirstNewNode);
-    insertElementIntoNode(&secondNewNode, firstElementOfSecondNewNode);
+    insertElementIntoNode(newNode1, firstElementOfFirstNewNode);
+    insertElementIntoNode(newNode2, firstElementOfSecondNewNode);
 
     int remainingCount = M - 1; // after removing 2 elements from elements array using PickSeeds
 
     while (remainingCount > 0)
     {
 
-        if (firstNewNode.count + remainingCount == m) // if there are too few entries in firstNewNode
+        if (newNode1->count + remainingCount == m) // if there are too few entries in firstNewNode
         {
 
             int index = 0;
@@ -670,7 +670,7 @@ void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear
                 else
                 {
                     updateChildPointer(newNode1, originalNode->entries + index);
-                    insertElementIntoNode(&firstNewNode, originalNode->entries[index]);
+                    insertElementIntoNode(newNode1, originalNode->entries[index]);
                     remainingCount--;
                 }
             }
@@ -678,7 +678,7 @@ void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear
             break;
         }
 
-        else if (secondNewNode.count + remainingCount == m) // if there are too few entries in secondNewNode
+        else if (newNode2->count + remainingCount == m) // if there are too few entries in secondNewNode
         {
 
             int index = 0;
@@ -694,7 +694,7 @@ void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear
                 else
                 {
                     updateChildPointer(newNode2, originalNode->entries + index);
-                    insertElementIntoNode(&secondNewNode, originalNode->entries[index]);
+                    insertElementIntoNode(newNode2, originalNode->entries[index]);
                     remainingCount--;
                 }
             }
@@ -702,59 +702,60 @@ void splitNode(node *originalNode, node *newNode1, node *newNode2, bool isLinear
             break;
         }
 
-        Element nextElement = pickNext(firstNewNode, secondNewNode, originalNode->entries); // pick the next element and add it to a node
+        Element nextElement = pickNext(*newNode1, *newNode2, originalNode->entries); // pick the next element and add it to a node
 
         if (isDummyElement(nextElement))
             break; // entries are finished
 
-        int cost1 = calculateCost(nextElement, firstNewNode);
-        int cost2 = calculateCost(nextElement, secondNewNode);
+        int cost1 = calculateCost(nextElement, *newNode1);
+        int cost2 = calculateCost(nextElement, *newNode2);
 
         if (cost1 < cost2) // add to the one with lower cost
         {
             updateChildPointer(newNode1, &nextElement);
-            insertElementIntoNode(&firstNewNode, nextElement);
+            insertElementIntoNode(newNode1, nextElement);
         }
         else if (cost2 < cost1)
         {
             updateChildPointer(newNode2, &nextElement);
-            insertElementIntoNode(&secondNewNode, nextElement);
+            insertElementIntoNode(newNode2, nextElement);
         }
         else
         {
-            int area1 = areaOfNodeMBR(firstNewNode);
-            int area2 = areaOfNodeMBR(secondNewNode);
+            int area1 = areaOfNodeMBR(*newNode1);
+            int area2 = areaOfNodeMBR(*newNode2);
 
             if (area1 < area2) // if cost is equal, add to the one with smaller area
             {
                 updateChildPointer(newNode1, &nextElement);
-                insertElementIntoNode(&firstNewNode, nextElement);
+                insertElementIntoNode(newNode1, nextElement);
             }
             else if (area1 > area2)
             {
                 updateChildPointer(newNode2, &nextElement);
-                insertElementIntoNode(&secondNewNode, nextElement);
+                insertElementIntoNode(newNode2, nextElement);
             }
             else
             {
-                if (firstNewNode.count < secondNewNode.count) // if areas are also equal, add to the one with smaller count
+                if (newNode1->count < newNode2->count) // if areas are also equal, add to the one with smaller count
 
                 {
                     updateChildPointer(newNode1, &nextElement);
-                    insertElementIntoNode(&firstNewNode, nextElement);
+                    insertElementIntoNode(newNode1, nextElement);
                 }
                 else
                 {
                     updateChildPointer(newNode2, &nextElement);
-                    insertElementIntoNode(&secondNewNode, nextElement);
+                    insertElementIntoNode(newNode2, nextElement);
                 }
             }
         }
 
         remainingCount--;
     }
-    *newNode1 = firstNewNode;
-    *newNode2 = secondNewNode;
+
+    // *newNode1 = firstNewNode;
+    // *newNode2 = secondNewNode;
 
     adjustParent(originalNode, newNode1, newNode2);
 }
@@ -961,7 +962,7 @@ int main()
     node* root = createNewNode();
     a->root = root;
 
-    int numDataPoints = 21; //number of 2D data points in data.txt
+    int numDataPoints = 8e4; //number of 2D data points in data.txt
     FILE* fptr = fopen("data.txt", "r");
     Element dataPoints[numDataPoints];
     
