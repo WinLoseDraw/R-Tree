@@ -949,8 +949,73 @@ void preorder_traversal(node* n)
 
 //----------------------------------------------------------main begins-----------------------------------------------------//
 
-int main() 
+int main()
 {
+    rtree* a = createNewRtree();
+    node* root = createNewNode();
+    a->root = root;
+
+    int n = 21; //number of 2D data points in data.txt
+    FILE* fptr = fopen("data.txt", "r");
+    Element dataPoints[n];
+    
+    for (int i = 0; i < n; i++) {
+        int a, b;
+        fscanf(fptr, "%d", &a);
+        fscanf(fptr, "%d", &b);
+        dataPoints[i].MBR[0][0] = a;
+        dataPoints[i].MBR[0][1] = a;
+        dataPoints[i].MBR[1][0] = b;
+        dataPoints[i].MBR[1][1] = b;
+        dataPoints[i].childPointer = NULL;
+    }
+
+    STR(dataPoints, n, a);
+
+    printf("\nInserted data points, tree created. Now printing pre-order traversal:\n\n");
+
+    preorder_traversal(a->root);
+
+    printf("\nConducting a sample search on the rectangle (3,2) to (10,8).");
+
+    int searchSpace[N][2] = {{3, 10}, {2, 8}};
+    Element **result = NULL;
+    int resultCount = 0;
+
+    printf("Searching: \n");
+
+    search_rtree(a->root, searchSpace, &result, &resultCount);
+
+    printf("Search Results:\n");
+    if (resultCount > 0)
+    {
+        printf("Results Found. \n");
+        for (int i = 0; i < resultCount; i++)
+        {
+            
+            printf("(%d, %d, %d, %d)\n", result[i]->MBR[0][0], result[i]->MBR[0][1], result[i]->MBR[1][0], result[i]->MBR[1][1]);
+        }
+    }
+    else
+    {
+        printf("No results found.\n");
+    }
+
+    printf("\nInserting a sample point (3,14) in the tree.\n");
+
+    Element samplePoint;
+    samplePoint.MBR[0][0] = 3;
+    samplePoint.MBR[0][1] = 3;
+    samplePoint.MBR[1][0] = 14;
+    samplePoint.MBR[1][1] = 14;
+    samplePoint.childPointer = NULL;
+
+    insert(a, samplePoint);
+
+    printf("\nSample point inserted. Now printing pre-order traversal:\n\n");
+
+    preorder_traversal(a->root);
+
     return 0;
 }
 
